@@ -5,6 +5,7 @@ import com.karoldm.k_board_api.dto.LoginResponseDTO;
 import com.karoldm.k_board_api.dto.RegisterDTO;
 import com.karoldm.k_board_api.dto.UserDTO;
 import com.karoldm.k_board_api.entities.User;
+import com.karoldm.k_board_api.services.FileStorageService;
 import com.karoldm.k_board_api.services.TokenService;
 import com.karoldm.k_board_api.services.UserService;
 import lombok.AllArgsConstructor;
