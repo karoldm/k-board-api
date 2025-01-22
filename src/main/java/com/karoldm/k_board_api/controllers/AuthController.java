@@ -39,8 +39,8 @@ public class AuthController {
         return ResponseEntity.ok().body(new LoginResponseDTO(token, new UserDTO(
                 user.getName(),
                 user.getEmail(),
-                user.getCreatedAt(),
-                user.getPhotoUrl()
+                user.getPhotoUrl(),
+                user.getCreatedAt()
         )));
     }
 
@@ -55,8 +55,8 @@ public class AuthController {
         return ResponseEntity.ok().body(new UserDTO(
                 user.getName(),
                 user.getEmail(),
-                user.getCreatedAt(),
-                user.getPhotoUrl()
+                user.getPhotoUrl(),
+                user.getCreatedAt()
         ));
     }
 }
