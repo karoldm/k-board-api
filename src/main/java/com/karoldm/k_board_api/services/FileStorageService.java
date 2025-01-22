@@ -34,11 +34,13 @@ public class FileStorageService {
         try {
             String key = UUID.randomUUID().toString();
 
-            String[] splittedFileName = fileUpload.getOriginalFilename().split("\\.");
-            if(splittedFileName.length == 0) {
+            String fileName = fileUpload.getOriginalFilename();
+            if (fileName != null) {
+            String[] splitFileName = fileName.split("\\.");
+            if(splitFileName.length == 0) {
                 throw new RuntimeException("Invalid file name or extension");
             }
-            String fileKey = splittedFileName[0]+"-"+key+"."+splittedFileName[1];
+            String fileKey = splitFileName[0] + "-" + key + "." + splitFileName[1];
 
             ObjectMetadata objectMetadata = new ObjectMetadata();
             objectMetadata.setContentLength(fileUpload.getSize());
@@ -53,6 +55,9 @@ public class FileStorageService {
             amazonS3Client.putObject(request);
 
             return bucketUrl + fileKey;
+
+            }
+            return null;
         } catch (IOException ex) {
             throw new RuntimeException("Error uploading file", ex);
         }
