@@ -8,6 +8,7 @@ import com.karoldm.k_board_api.entities.User;
 import com.karoldm.k_board_api.services.FileStorageService;
 import com.karoldm.k_board_api.services.TokenService;
 import com.karoldm.k_board_api.services.UserService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class AuthController {
     private UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody @Validated LoginDTO data) {
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid LoginDTO data) {
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.email(), data.password());
         var auth = authenticationManager.authenticate(usernamePassword);
 
@@ -44,7 +45,8 @@ public class AuthController {
     }
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> registerUser(@ModelAttribute @Validated RegisterDTO data) {
+    public ResponseEntity<?> registerUser(@ModelAttribute @Valid RegisterDTO data) {
+
         if(userService.findUserByEmail(data.email()) != null){
             return ResponseEntity.badRequest().body("Email already registered.");
         }
