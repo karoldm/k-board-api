@@ -1,15 +1,18 @@
 package com.karoldm.k_board_api.services;
 
-import com.karoldm.k_board_api.dto.RegisterDTO;
+import com.karoldm.k_board_api.dto.payload.RegisterPayloadDTO;
 import com.karoldm.k_board_api.entities.User;
 import com.karoldm.k_board_api.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -22,15 +25,15 @@ public class UserService {
     }
 
     @Transactional
-    public User createUser(RegisterDTO data) {
-        String encryptedPasswrod = new BCryptPasswordEncoder().encode(data.password());
+    public User createUser(RegisterPayloadDTO data) {
+        String encryptedPassword = new BCryptPasswordEncoder().encode(data.password());
         LocalDate createdAt = LocalDate.now();
 
         String photoKey = storageService.upload(data.photo());
 
         User user = new User();
         user.setEmail(data.email());
-        user.setPassword(encryptedPasswrod);
+        user.setPassword(encryptedPassword);
         user.setCreatedAt(createdAt);
         user.setName(data.name());
         user.setPhotoUrl(photoKey);
@@ -38,4 +41,11 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public Optional<User> findUserById(UUID id) {
+        return userRepository.findById(id);
+    }
+
+    public List<User> findAllUsersById(Set<UUID> ids) {
+        return userRepository.findAllById(ids);
+    }
 }

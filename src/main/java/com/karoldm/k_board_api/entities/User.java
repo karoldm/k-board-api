@@ -44,6 +44,13 @@ public class User implements UserDetails {
     @JsonManagedReference
     private Set<Project> projects = new HashSet<>();
 
+    @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY)
+    private Set<Project> participatedProjects = new HashSet<>();
+
+    public void addProjectParticipated(Project project) {
+        participatedProjects.add(project);
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));

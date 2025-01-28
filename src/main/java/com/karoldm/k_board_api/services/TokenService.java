@@ -31,7 +31,6 @@ public class TokenService {
     }
 
     public String validateToken(String token) {
-        try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
 
             return JWT.require(algorithm)
@@ -39,9 +38,6 @@ public class TokenService {
                     .verify(token)
                     .getSubject();
 
-        } catch(JWTVerificationException exception) {
-            throw new JWTVerificationException("Error validating exception: " + exception);
-        }
     }
 
     private Instant generateExpirationDate() {

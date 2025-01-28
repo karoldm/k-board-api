@@ -1,9 +1,11 @@
-package com.karoldm.k_board_api.dto;
+package com.karoldm.k_board_api.dto.payload;
 
-import java.util.Set;
-import java.util.UUID;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
-public record ProjectDTO(
+public record ProjectPayloadDTO(
+        @NotNull(message = "Title cannot be null")
+        @NotEmpty(message = "Title cannot be empty")
         String title
 ) {
 }
