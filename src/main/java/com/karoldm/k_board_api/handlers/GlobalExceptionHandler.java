@@ -9,6 +9,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -38,6 +39,23 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(errorObject, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponseDTO> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        if (ex.getRequiredType() == java.util.UUID.class) {
+            ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                    HttpStatus.NOT_FOUND.value(),
+                    "Resource not found. Invalid UUID: " + ex.getValue()
+            );
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        }
+
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                HttpStatus.NOT_FOUND.value(),
+                "Invalid parameters: " + ex.getValue()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler({JWTVerificationException.class, JWTDecodeException.class})
