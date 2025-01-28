@@ -1,7 +1,7 @@
-package com.karoldm.k_board_api.dto;
+package com.karoldm.k_board_api.dto.response;
 
 public record LoginResponseDTO(
         String token,
-        UserDTO user
+        UserResponseDTO user
 ) {
 }
