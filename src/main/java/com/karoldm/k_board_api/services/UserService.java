@@ -5,6 +5,7 @@ import com.karoldm.k_board_api.entities.User;
 import com.karoldm.k_board_api.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -47,5 +48,10 @@ public class UserService {
 
     public List<User> findAllUsersById(Set<UUID> ids) {
         return userRepository.findAllById(ids);
+    }
+
+    public User getLoggedUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return this.findUserByEmail(email);
     }
 }

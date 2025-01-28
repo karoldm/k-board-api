@@ -2,6 +2,7 @@ package com.karoldm.k_board_api.controllers;
 
 import com.karoldm.k_board_api.dto.payload.AddMemberPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.ProjectPayloadDTO;
+import com.karoldm.k_board_api.dto.response.ErrorResponseDTO;
 import com.karoldm.k_board_api.dto.response.ProjectResponseDTO;
 import com.karoldm.k_board_api.entities.Project;
 import com.karoldm.k_board_api.entities.User;
@@ -32,20 +33,15 @@ public class ProjectController {
 
     @PostMapping
     private ResponseEntity<ProjectResponseDTO> createProject(@RequestBody ProjectPayloadDTO data) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userService.findUserByEmail(email);
-
-        Project project = projectService.createProject(data, user);
+        Project project = projectService.createProject(data, userService.getLoggedUser());
 
         return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(project));
     }
 
     @GetMapping
     private ResponseEntity<List<ProjectResponseDTO>> getAllProjectsByUser() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userService.findUserByEmail(email);
 
-        List<Project> projects = projectService.getAllProjectsByUserId(user.getId());
+        List<Project> projects = projectService.getAllProjectsByUserId(userService.getLoggedUser().getId());
 
         List<ProjectResponseDTO> responseProjects = projects.stream()
                 .map(ProjectMapper::toProjectResponseDTO)
@@ -63,6 +59,13 @@ public class ProjectController {
         if(project.isEmpty()){
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Project not found with ID: " + projectId);
+        }
+
+        User loggedUser = userService.getLoggedUser();
+
+        if(loggedUser.getId() != project.get().getOwner().getId()){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ErrorResponseDTO(HttpStatus.FORBIDDEN.value(), "User aren't projects owner."));
         }
 
         List<User> users = userService.findAllUsersById(membersId);
