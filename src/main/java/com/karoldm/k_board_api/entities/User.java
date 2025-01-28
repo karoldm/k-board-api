@@ -51,6 +51,10 @@ public class User implements UserDetails {
         participatedProjects.add(project);
     }
 
+    public void removeProjectParticipated(Project project) {
+        participatedProjects.remove(project);
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
