@@ -50,7 +50,7 @@ public class UserService {
         return userRepository.findAllById(ids);
     }
 
-    public User getLoggedUser() {
+    public User getSessionUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return this.findUserByEmail(email);
     }

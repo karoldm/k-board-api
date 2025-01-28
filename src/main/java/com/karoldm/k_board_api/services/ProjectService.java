@@ -1,5 +1,7 @@
 package com.karoldm.k_board_api.services;
 
+import com.amazonaws.services.codestar.model.ProjectNotFoundException;
+import com.amazonaws.services.kms.model.NotFoundException;
 import com.karoldm.k_board_api.dto.payload.ProjectPayloadDTO;
 import com.karoldm.k_board_api.entities.Project;
 import com.karoldm.k_board_api.entities.User;
@@ -48,5 +50,15 @@ public class ProjectService {
         userRepository.saveAll(members);
 
         return project;
+    }
+
+    public Project updateProject(String title, UUID id) {
+        Project project = projectRepository.findById(id).orElse(null);
+        if(project == null) {
+            throw new NotFoundException("Project not found with id: " + id);
+        }
+
+        project.setTitle(title);
+        return projectRepository.save(project);
     }
 }

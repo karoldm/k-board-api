@@ -1,6 +1,6 @@
 package com.karoldm.k_board_api.controllers;
 
-import com.karoldm.k_board_api.dto.payload.AddMemberPayloadDTO;
+import com.karoldm.k_board_api.dto.payload.AddMembersPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.ProjectPayloadDTO;
 import com.karoldm.k_board_api.dto.response.ErrorResponseDTO;
 import com.karoldm.k_board_api.dto.response.ProjectResponseDTO;
@@ -12,7 +12,7 @@ import com.karoldm.k_board_api.services.UserService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,7 +33,7 @@ public class ProjectController {
 
     @PostMapping
     private ResponseEntity<ProjectResponseDTO> createProject(@RequestBody ProjectPayloadDTO data) {
-        Project project = projectService.createProject(data, userService.getLoggedUser());
+        Project project = projectService.createProject(data, userService.getSessionUser());
 
         return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(project));
     }
@@ -41,7 +41,7 @@ public class ProjectController {
     @GetMapping
     private ResponseEntity<List<ProjectResponseDTO>> getAllProjectsByUser() {
 
-        List<Project> projects = projectService.getAllProjectsByUserId(userService.getLoggedUser().getId());
+        List<Project> projects = projectService.getAllProjectsByUserId(userService.getSessionUser().getId());
 
         List<ProjectResponseDTO> responseProjects = projects.stream()
                 .map(ProjectMapper::toProjectResponseDTO)
@@ -50,22 +50,15 @@ public class ProjectController {
         return ResponseEntity.ok(responseProjects);
     }
 
-    @PostMapping("/members")
-    private ResponseEntity<?> addMember(@RequestBody AddMemberPayloadDTO addMemberDTO) {
-        UUID projectId = addMemberDTO.projectId();
+    @PutMapping("/{id}/members")
+    @PreAuthorize("@ownershipSecurity.isOwner(#id)")
+    private ResponseEntity<?> addMembers(@RequestBody AddMembersPayloadDTO addMemberDTO, @PathVariable UUID id) {
         Set<UUID> membersId = addMemberDTO.membersId();
 
-        Optional<Project> project = projectService.findProjectById(projectId);
+        Optional<Project> project = projectService.findProjectById(id);
         if(project.isEmpty()){
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Project not found with ID: " + projectId);
-        }
-
-        User loggedUser = userService.getLoggedUser();
-
-        if(loggedUser.getId() != project.get().getOwner().getId()){
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new ErrorResponseDTO(HttpStatus.FORBIDDEN.value(), "User aren't projects owner."));
+                    .body("Project not found with ID: " + id);
         }
 
         List<User> users = userService.findAllUsersById(membersId);
@@ -83,4 +76,12 @@ public class ProjectController {
 
         return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(updatedProject));
     }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("@ownershipSecurity.isOwner(#id)")
+    private ResponseEntity<ProjectResponseDTO> updateProject(@RequestBody ProjectPayloadDTO data, @PathVariable UUID id) {
+        Project updatedProject = projectService.updateProject(data.title(), id);
+        return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(updatedProject));
+    }
+
 }
