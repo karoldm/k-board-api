@@ -51,4 +51,8 @@ public class Project {
     public void addMembers(Set<User> members) {
         this.members.addAll(members);
     }
+
+    public void removeMembers(Set<User> members){
+        this.members.removeAll(members);
+    }
 }

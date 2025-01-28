@@ -1,4 +1,6 @@
 package com.karoldm.k_board_api.handlers;
+import com.amazonaws.services.budgets.model.NotFoundException;
+import com.amazonaws.services.pinpoint.model.ForbiddenException;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.karoldm.k_board_api.dto.response.ErrorResponseDTO;
@@ -65,6 +67,26 @@ public class GlobalExceptionHandler {
                 "Invalid token: " + ex.getMessage()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponseDTO> handleForbiddenException(ForbiddenException ex) {
+        ErrorResponseDTO errorObject = new ErrorResponseDTO(
+                HttpStatus.FORBIDDEN.value(),
+                ex.getErrorMessage()
+        );
+
+        return new ResponseEntity<>(errorObject, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleForbiddenException(NotFoundException ex) {
+        ErrorResponseDTO errorObject = new ErrorResponseDTO(
+                HttpStatus.NOT_FOUND.value(),
+                ex.getErrorMessage()
+        );
+
+        return new ResponseEntity<>(errorObject, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(Exception.class)
