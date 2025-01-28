@@ -41,7 +41,7 @@ public class ProjectController {
     }
 
     @GetMapping
-    private ResponseEntity<List<ProjectResponseDTO>> getAllProjectByUser() {
+    private ResponseEntity<List<ProjectResponseDTO>> getAllProjectsByUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userService.findUserByEmail(email);
 
