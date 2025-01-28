@@ -30,8 +30,8 @@ public class ProjectService {
         return projectRepository.save(project);
     }
 
-    public List<Project> getAllProjects() {
-        return projectRepository.findAll();
+    public List<Project> getAllProjectsByUserId(UUID userId) {
+        return projectRepository.findAll().stream().filter(project -> project.getOwner().getId() == userId).toList();
     }
 
     public Optional<Project> findProjectById(UUID id) {return projectRepository.findById(id);}
