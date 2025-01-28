@@ -1,6 +1,10 @@
 package com.karoldm.k_board_api.infra.security;
 
 
+import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.karoldm.k_board_api.dto.response.ErrorResponseDTO;
 import com.karoldm.k_board_api.repositories.UserRepository;
 import com.karoldm.k_board_api.services.TokenService;
 import jakarta.servlet.FilterChain;
@@ -17,18 +21,28 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@AllArgsConstructor
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
-    @Autowired
-    TokenService tokenService;
-    @Autowired
-    UserRepository userRepository;
+
+    private final ObjectMapper objectMapper;
+    private final TokenService tokenService;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        var token = this.recoverToken(request);
+        if (isPublicRoute(request)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-        if(token != null){
+        try {
+            String token = recoverToken(request);
+            if (token == null || token.isEmpty()) {
+                sendErrorResponse(response, "Token is missing.");
+                return;
+            }
+
             var email = tokenService.validateToken(token);
             UserDetails user = userRepository.findByEmail(email);
 
@@ -36,8 +50,26 @@ public class SecurityFilter extends OncePerRequestFilter {
                 var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
+
+            filterChain.doFilter(request, response);
+
+        } catch (JWTDecodeException ex) {
+            sendErrorResponse(response, "Error decoding token: " + ex.getMessage());
+        } catch (JWTVerificationException ex) {
+            sendErrorResponse(response, "Invalid token: " + ex.getMessage());
         }
-        filterChain.doFilter(request, response);
+    }
+
+    private void sendErrorResponse(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(HttpServletResponse.SC_UNAUTHORIZED, message);
+        response.setContentType("application/json");
+        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+    }
+
+    private boolean isPublicRoute(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        return uri.equals("/auth/login") || uri.equals("/auth/register");
     }
 
     private String recoverToken(HttpServletRequest request){
