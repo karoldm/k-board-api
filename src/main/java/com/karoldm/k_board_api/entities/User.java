@@ -1,5 +1,6 @@
 package com.karoldm.k_board_api.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -45,6 +46,7 @@ public class User implements UserDetails {
     private Set<Project> projects = new HashSet<>();
 
     @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY)
+    @JsonBackReference
     private Set<Project> participatedProjects = new HashSet<>();
 
     @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY)
