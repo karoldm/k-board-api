@@ -18,10 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController()
@@ -54,13 +51,22 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<Set<TaskResponseDTO>> getAllTasksByProject(@PathVariable UUID projectId) {
+    public ResponseEntity<Set<TaskResponseDTO>> getAllTasksByProject(@PathVariable UUID projectId, @RequestParam Optional<UUID> memberId) {
         checkProjectOwnershipOrParticipation(projectId);
         Project project = getProjectOrThrow(projectId);
 
         Set<TaskResponseDTO> responseTasks = project.getTasks().stream()
                 .map(TaskMapper::toTaskResponseDTO)
                 .collect(Collectors.toSet());
+
+        if(memberId.isPresent()){
+            responseTasks = responseTasks.stream()
+                    .filter(task -> task.members()
+                            .stream()
+                            .anyMatch(responsible -> responsible.id() == memberId.get()))
+                    .collect(Collectors.toSet());
+        }
+
 
         return ResponseEntity.ok(responseTasks);
     }
