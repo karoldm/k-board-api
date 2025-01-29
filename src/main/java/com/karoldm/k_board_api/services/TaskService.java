@@ -48,4 +48,9 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
+    @Transactional
+    public void deleteTask(UUID id) {
+        taskRepository.deleteById(id);
+    }
+
 }
