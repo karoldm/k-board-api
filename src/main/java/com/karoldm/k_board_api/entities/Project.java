@@ -25,7 +25,6 @@ public class Project {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @NotNull(message = "title cannot be null")
     @NotEmpty(message = "title cannot be empty")
     private String title;
 
@@ -35,7 +34,7 @@ public class Project {
     private Set<Task> tasks = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id")
+    @JoinColumn(name = "owner_id", nullable = false)
     @JsonBackReference
     private User owner;
 

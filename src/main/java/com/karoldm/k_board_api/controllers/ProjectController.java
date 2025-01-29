@@ -1,8 +1,5 @@
 package com.karoldm.k_board_api.controllers;
 
-import com.amazonaws.services.kms.model.NotFoundException;
-import com.amazonaws.services.pinpoint.model.BadRequestException;
-import com.amazonaws.services.pinpoint.model.ForbiddenException;
 import com.karoldm.k_board_api.dto.payload.AddMemberPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.ProjectPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.RemoveMembersPayloadDTO;
@@ -12,6 +9,8 @@ import com.karoldm.k_board_api.entities.User;
 import com.karoldm.k_board_api.mappers.ProjectMapper;
 import com.karoldm.k_board_api.services.ProjectService;
 import com.karoldm.k_board_api.services.UserService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +21,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/project")
@@ -32,7 +32,7 @@ public class ProjectController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<ProjectResponseDTO> createProject(@RequestBody ProjectPayloadDTO data) {
+    public ResponseEntity<ProjectResponseDTO> createProject(@RequestBody @Valid ProjectPayloadDTO data) {
         Project project = projectService.createProject(data, userService.getSessionUser());
         return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(project));
     }
@@ -63,16 +63,16 @@ public class ProjectController {
     }
 
     @PutMapping("/{id}/member")
-    public ResponseEntity<ProjectResponseDTO> addMember(@RequestBody AddMemberPayloadDTO addMemberDTO, @PathVariable UUID id) {
+    public ResponseEntity<ProjectResponseDTO> addMember(@RequestBody @Valid AddMemberPayloadDTO addMemberDTO, @PathVariable UUID id) {
         Project project = getProjectOrThrow(id);
         Optional<User> member = userService.findUserById(addMemberDTO.memberId());
 
         if (member.isEmpty()) {
-            throw new NotFoundException("User not found with ID: " + addMemberDTO.memberId());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + addMemberDTO.memberId());
         }
 
         if(member.get().getId() == userService.getSessionUser().getId()) {
-            throw new BadRequestException("User is project's owner.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User is project's owner.");
         }
 
         Project updatedProject = projectService.addMemberToProject(project, member.get());
@@ -80,7 +80,7 @@ public class ProjectController {
     }
 
     @DeleteMapping("/{id}/members")
-    public ResponseEntity<ProjectResponseDTO> deleteMembers(@RequestBody RemoveMembersPayloadDTO removeMembersPayloadDTO, @PathVariable UUID id) {
+    public ResponseEntity<ProjectResponseDTO> deleteMembers(@RequestBody @Valid RemoveMembersPayloadDTO removeMembersPayloadDTO, @PathVariable UUID id) {
         Project project = getProjectOrThrow(id);
         checkProjectOwnership(id);
 
@@ -92,7 +92,7 @@ public class ProjectController {
                 .collect(Collectors.toSet());
 
         if (!missingUserIds.isEmpty()) {
-            throw new NotFoundException("Users not found with IDs: " + missingUserIds);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Users not found with IDs: " + missingUserIds);
         }
 
         Project updatedProject = projectService.deleteMembersToProject(project, users);
@@ -100,7 +100,7 @@ public class ProjectController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProjectResponseDTO> updateProject(@RequestBody ProjectPayloadDTO data, @PathVariable UUID id) {
+    public ResponseEntity<ProjectResponseDTO> updateProject(@RequestBody @Valid ProjectPayloadDTO data, @PathVariable UUID id) {
         checkProjectOwnership(id);
         Project updatedProject = projectService.updateProject(data.title(), id);
         return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(updatedProject));
@@ -108,12 +108,12 @@ public class ProjectController {
 
     private void checkProjectOwnership(UUID projectId) {
         if (userService.getSessionUser().getProjects().stream().noneMatch(project -> project.getId().equals(projectId))) {
-            throw new ForbiddenException("You do not have permission to access this project");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this project");
         }
     }
 
     private Project getProjectOrThrow(UUID projectId) {
         return projectService.findProjectById(projectId)
-                .orElseThrow(() -> new NotFoundException("Project not found with id: " + projectId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found with id: " + projectId));
     }
 }
