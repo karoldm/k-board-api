@@ -15,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -40,42 +39,48 @@ public class ProjectController {
     @GetMapping("/owner")
     public ResponseEntity<List<ProjectResponseDTO>> getAllProjectsByUser() {
         Set<Project> projects = userService.getSessionUser().getProjects();
+
         List<ProjectResponseDTO> responseProjects = projects.stream()
                 .map(ProjectMapper::toProjectResponseDTO)
                 .collect(Collectors.toList());
+
         return ResponseEntity.ok(responseProjects);
     }
 
     @GetMapping("/member")
     public ResponseEntity<List<ProjectResponseDTO>> getAllProjectsByUserParticipation() {
         Set<Project> projects = userService.getSessionUser().getParticipatedProjects();
+
         List<ProjectResponseDTO> responseProjects = projects.stream()
                 .map(ProjectMapper::toProjectResponseDTO)
                 .collect(Collectors.toList());
+
         return ResponseEntity.ok(responseProjects);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable UUID id) {
         checkProjectOwnership(id);
+        Project project = getProjectOrThrow(id);
+
+        for(User user: project.getMembers()){
+            user.getProjects().remove(project);
+        }
+
         projectService.deleteProject(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/{id}/member")
-    public ResponseEntity<ProjectResponseDTO> addMember(@RequestBody @Valid AddMemberPayloadDTO addMemberDTO, @PathVariable UUID id) {
-        Project project = getProjectOrThrow(id);
-        Optional<User> member = userService.findUserById(addMemberDTO.memberId());
+    @PutMapping("/member")
+    public ResponseEntity<ProjectResponseDTO> addMember(@RequestBody @Valid AddMemberPayloadDTO data) {
+        Project project = getProjectOrThrow(data.projectId());
+        User member = userService.getSessionUser();
 
-        if (member.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + addMemberDTO.memberId());
-        }
-
-        if(member.get().getId() == userService.getSessionUser().getId()) {
+        if(member.getId() == project.getOwner().getId()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User is project's owner.");
         }
 
-        Project updatedProject = projectService.addMemberToProject(project, member.get());
+        Project updatedProject = projectService.addMemberToProject(project, member);
         return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(updatedProject));
     }
 
