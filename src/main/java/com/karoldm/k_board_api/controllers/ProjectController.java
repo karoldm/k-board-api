@@ -36,9 +36,18 @@ public class ProjectController {
         return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(project));
     }
 
-    @GetMapping
+    @GetMapping("/owner")
     public ResponseEntity<List<ProjectResponseDTO>> getAllProjectsByUser() {
-        List<Project> projects = projectService.getAllProjectsByUserId(userService.getSessionUser().getId());
+        Set<Project> projects = userService.getSessionUser().getProjects();
+        List<ProjectResponseDTO> responseProjects = projects.stream()
+                .map(ProjectMapper::toProjectResponseDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(responseProjects);
+    }
+
+    @GetMapping("/member")
+    public ResponseEntity<List<ProjectResponseDTO>> getAllProjectsByUserParticipation() {
+        Set<Project> projects = userService.getSessionUser().getParticipatedProjects();
         List<ProjectResponseDTO> responseProjects = projects.stream()
                 .map(ProjectMapper::toProjectResponseDTO)
                 .collect(Collectors.toList());

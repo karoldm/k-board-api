@@ -21,10 +21,6 @@ public class ProjectService {
     private ProjectRepository projectRepository;
     private UserRepository userRepository;
 
-    public List<Project> getAllProjectsByUserId(UUID userId) {
-        return projectRepository.findAll().stream().filter(project -> project.getOwner().getId() == userId).toList();
-    }
-
     public Optional<Project> findProjectById(UUID id) {return projectRepository.findById(id);}
 
     @Transactional
