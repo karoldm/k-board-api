@@ -1,6 +1,7 @@
 package com.karoldm.k_board_api.controllers;
 
 import com.amazonaws.services.kms.model.NotFoundException;
+import com.amazonaws.services.pinpoint.model.BadRequestException;
 import com.amazonaws.services.pinpoint.model.ForbiddenException;
 import com.karoldm.k_board_api.dto.payload.AddMemberPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.ProjectPayloadDTO;
@@ -62,12 +63,16 @@ public class ProjectController {
     }
 
     @PutMapping("/{id}/member")
-    public ResponseEntity<ProjectResponseDTO> addMembers(@RequestBody AddMemberPayloadDTO addMemberDTO, @PathVariable UUID id) {
+    public ResponseEntity<ProjectResponseDTO> addMember(@RequestBody AddMemberPayloadDTO addMemberDTO, @PathVariable UUID id) {
         Project project = getProjectOrThrow(id);
         Optional<User> member = userService.findUserById(addMemberDTO.memberId());
 
         if (member.isEmpty()) {
             throw new NotFoundException("User not found with ID: " + addMemberDTO.memberId());
+        }
+
+        if(member.get().getId() == userService.getSessionUser().getId()) {
+            throw new BadRequestException("User is project's owner.");
         }
 
         Project updatedProject = projectService.addMemberToProject(project, member.get());
