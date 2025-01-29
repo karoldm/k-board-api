@@ -1,5 +1,6 @@
 package com.karoldm.k_board_api.handlers;
 import com.amazonaws.services.budgets.model.NotFoundException;
+import com.amazonaws.services.pinpoint.model.BadRequestException;
 import com.amazonaws.services.pinpoint.model.ForbiddenException;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
@@ -87,6 +88,16 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(errorObject, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponseDTO> handleForbiddenException(BadRequestException ex) {
+        ErrorResponseDTO errorObject = new ErrorResponseDTO(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getErrorMessage()
+        );
+
+        return new ResponseEntity<>(errorObject, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
