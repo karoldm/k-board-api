@@ -40,15 +40,11 @@ public class ProjectService {
     }
 
     @Transactional
-    public Project addMembersToProject(Project project, List<User> members) {
-
-        project.addMembers(new HashSet<>(members));
+    public Project addMemberToProject(Project project, User member) {
+        project.addMember(member);
         projectRepository.save(project);
-
-        for (User member : members) {
-            member.addProjectParticipated(project);
-        }
-        userRepository.saveAll(members);
+        member.addProjectParticipated(project);
+        userRepository.save(member);
 
         return project;
     }
