@@ -8,6 +8,9 @@ import java.util.Set;
 import java.util.UUID;
 
 public record TaskPayloadDTO(
+    @NotNull(message = "projectId cannot be null")
+    UUID projectId,
+
     @NotEmpty(message = "title cannot be empty")
     String title,
 
