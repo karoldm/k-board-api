@@ -99,6 +99,20 @@ public class TaskController {
         return ResponseEntity.ok(TaskMapper.toTaskResponseDTO(updatedTask));
     }
 
+    @DeleteMapping("/{taskId}")
+    public ResponseEntity<Void> deleteTask(@PathVariable UUID taskId) {
+        Optional<Task> task = taskService.findTaskById(taskId);
+
+        if(task.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found with ID: " + taskId);
+        }
+
+        taskService.deleteTask(taskId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+
     private void checkProjectOwnershipOrParticipation(UUID projectId) {
         boolean isOwner = userService.getSessionUser().getProjects().stream().anyMatch(project -> project.getId().equals(projectId));
         boolean isMember = userService.getSessionUser().getParticipatedProjects().stream().anyMatch(project -> project.getId().equals(projectId));
