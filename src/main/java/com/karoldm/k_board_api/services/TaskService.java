@@ -1,5 +1,6 @@
 package com.karoldm.k_board_api.services;
 
+import com.karoldm.k_board_api.dto.payload.EditTaskPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.TaskPayloadDTO;
 import com.karoldm.k_board_api.entities.Project;
 import com.karoldm.k_board_api.entities.Task;
@@ -54,8 +55,13 @@ public class TaskService {
     }
 
     @Transactional
-    public Task editTask(Task task, TaskStatus status){
-        task.setStatus(status.toString());
+    public Task editTask(Task task, EditTaskPayloadDTO data){
+        task.setStatus(data.status().toString());
+        task.setDescription(data.description());
+        task.setTitle(data.title());
+        task.setColor(data.color());
+        task.setTags(data.tags());
+
         return taskRepository.save(task);
     }
 }
