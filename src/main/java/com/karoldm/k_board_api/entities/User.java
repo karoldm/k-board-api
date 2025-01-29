@@ -47,6 +47,10 @@ public class User implements UserDetails {
     @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY)
     private Set<Project> participatedProjects = new HashSet<>();
 
+    @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<Task> tasks;
+
     public void addProjectParticipated(Project project) {
         participatedProjects.add(project);
     }

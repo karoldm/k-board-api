@@ -1,10 +1,9 @@
 package com.karoldm.k_board_api.dto.response;
 
 import com.karoldm.k_board_api.enums.TaskStatus;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
+import java.util.Set;
 import java.util.UUID;
 
 public record TaskResponseDTO(
@@ -12,7 +11,10 @@ public record TaskResponseDTO(
         String title,
         String description,
         LocalDate createdAt,
-        TaskStatus status,
-        String color
+        String status,
+        String color,
+        Set<String> tags,
+        UserResponseDTO createdBy,
+        Set<UserResponseDTO> members
 ) {
 }

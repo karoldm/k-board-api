@@ -1,7 +1,10 @@
 package com.karoldm.k_board_api.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.karoldm.k_board_api.enums.TaskStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -18,14 +21,37 @@ public class Task {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
+    @NotEmpty(message = "title cannot be empty")
     private String title;
-    private String description;
-    private LocalDate createdAt;
-    private TaskStatus status;
-    private String color;
-    //private ArrayList<String> tags = new ArrayList<>();
 
-    @ManyToOne
-    @JoinColumn(name = "project_id")
+    @NotEmpty(message = "description cannot be empty")
+    private String description;
+
+    private LocalDate createdAt;
+
+    @NotEmpty(message = "status cannot be empty")
+    private String status;
+
+    @NotEmpty(message = "color cannot be empty")
+    private String color;
+
+    @ElementCollection
+    private Set<String> tags = new HashSet<>();
+
+    @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id", nullable = false)
     private Project project;
+
+    @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User createdBy;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name="task_atribuization",
+            joinColumns = @JoinColumn(name="task_id"),
+            inverseJoinColumns = @JoinColumn(name="user_id")
+    )
+    @JsonBackReference
+    private Set<User> responsible = new HashSet<>();
 }

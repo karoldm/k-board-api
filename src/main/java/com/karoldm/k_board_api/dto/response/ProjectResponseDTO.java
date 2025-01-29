@@ -12,7 +12,6 @@ public record ProjectResponseDTO(
         UUID id,
         String title,
         LocalDate createdAt,
-        Set<TaskResponseDTO> tasks,
         Set<UserResponseDTO> members
 ) {
 }

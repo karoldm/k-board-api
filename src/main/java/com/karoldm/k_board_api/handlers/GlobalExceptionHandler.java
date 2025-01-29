@@ -1,18 +1,23 @@
 package com.karoldm.k_board_api.handlers;
-import com.amazonaws.services.budgets.model.NotFoundException;
-import com.amazonaws.services.pinpoint.model.BadRequestException;
-import com.amazonaws.services.pinpoint.model.ForbiddenException;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.karoldm.k_board_api.dto.response.ErrorResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -55,10 +60,10 @@ public class GlobalExceptionHandler {
         }
 
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
-                HttpStatus.NOT_FOUND.value(),
+                HttpStatus.BAD_REQUEST.value(),
                 "Invalid parameters: " + ex.getValue()
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler({JWTVerificationException.class, JWTDecodeException.class})
@@ -70,31 +75,39 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
 
-    @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<ErrorResponseDTO> handleForbiddenException(ForbiddenException ex) {
-        ErrorResponseDTO errorObject = new ErrorResponseDTO(
-                HttpStatus.FORBIDDEN.value(),
-                ex.getErrorMessage()
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponseDTO> handleResponseStatusException(ResponseStatusException ex) {
+        String message = ex.getMessage();
+
+        Pattern pattern = Pattern.compile("\"([^\"]*)\"");
+        Matcher matcher = pattern.matcher(message);
+
+        if (matcher.find()) {
+            message = matcher.group(1);
+        }
+
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                ex.getStatusCode().value(),
+                message
         );
 
-        return new ResponseEntity<>(errorObject, HttpStatus.FORBIDDEN);
+        return new ResponseEntity<>(errorResponse, ex.getStatusCode());
     }
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> handleForbiddenException(NotFoundException ex) {
-        ErrorResponseDTO errorObject = new ErrorResponseDTO(
-                HttpStatus.NOT_FOUND.value(),
-                ex.getErrorMessage()
-        );
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponseDTO> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex){
+        String message = ex.getMessage();
 
-        return new ResponseEntity<>(errorObject, HttpStatus.NOT_FOUND);
-    }
+        Pattern pattern = Pattern.compile("\"([^\"]*)\"");
+        Matcher matcher = pattern.matcher(message);
 
-    @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ErrorResponseDTO> handleForbiddenException(BadRequestException ex) {
+        if (matcher.find()) {
+            message = matcher.group(1);
+        }
+
         ErrorResponseDTO errorObject = new ErrorResponseDTO(
                 HttpStatus.BAD_REQUEST.value(),
-                ex.getErrorMessage()
+                message
         );
 
         return new ResponseEntity<>(errorObject, HttpStatus.BAD_REQUEST);
@@ -105,6 +118,7 @@ public class GlobalExceptionHandler {
         ErrorResponseDTO errorObject = new ErrorResponseDTO(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "An unexpected error occurred: " + ex.getMessage()
+                + " - " + ex.getCause() + " - " + Arrays.toString(ex.getStackTrace())
         );
 
         return new ResponseEntity<>(errorObject, HttpStatus.INTERNAL_SERVER_ERROR);
