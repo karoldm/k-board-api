@@ -2,6 +2,7 @@ package com.karoldm.k_board_api.controllers;
 
 import com.karoldm.k_board_api.dto.payload.AddMemberPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.AddResponsiblePayloadDTO;
+import com.karoldm.k_board_api.dto.payload.EditTaskPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.TaskPayloadDTO;
 import com.karoldm.k_board_api.dto.response.ProjectResponseDTO;
 import com.karoldm.k_board_api.dto.response.TaskResponseDTO;
@@ -96,6 +97,20 @@ public class TaskController {
         }
 
         Task updatedTask = taskService.addMembersToTask(task.get(), projectMembers);
+        return ResponseEntity.ok(TaskMapper.toTaskResponseDTO(updatedTask));
+    }
+
+    @PutMapping("/{taskId}")
+    public ResponseEntity<TaskResponseDTO> editTask(@PathVariable UUID taskId, @RequestBody @Valid EditTaskPayloadDTO data) {
+
+        Optional<Task> task = taskService.findTaskById(taskId);
+
+        if(task.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found with ID: " + taskId);
+        }
+
+        Task updatedTask = taskService.editTask(task.get(), data.status());
+
         return ResponseEntity.ok(TaskMapper.toTaskResponseDTO(updatedTask));
     }
 

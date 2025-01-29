@@ -77,18 +77,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErrorResponseDTO> handleResponseStatusException(ResponseStatusException ex) {
-        String message = ex.getMessage();
-
-        Pattern pattern = Pattern.compile("\"([^\"]*)\"");
-        Matcher matcher = pattern.matcher(message);
-
-        if (matcher.find()) {
-            message = matcher.group(1);
-        }
-
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
                 ex.getStatusCode().value(),
-                message
+                ex.getMessage()
         );
 
         return new ResponseEntity<>(errorResponse, ex.getStatusCode());
@@ -96,18 +87,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponseDTO> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex){
-        String message = ex.getMessage();
-
-        Pattern pattern = Pattern.compile("\"([^\"]*)\"");
-        Matcher matcher = pattern.matcher(message);
-
-        if (matcher.find()) {
-            message = matcher.group(1);
-        }
 
         ErrorResponseDTO errorObject = new ErrorResponseDTO(
                 HttpStatus.BAD_REQUEST.value(),
-                message
+                ex.getMessage()
         );
 
         return new ResponseEntity<>(errorObject, HttpStatus.BAD_REQUEST);

@@ -53,4 +53,9 @@ public class TaskService {
         taskRepository.deleteById(id);
     }
 
+    @Transactional
+    public Task editTask(Task task, TaskStatus status){
+        task.setStatus(status.toString());
+        return taskRepository.save(task);
+    }
 }
