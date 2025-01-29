@@ -109,7 +109,7 @@ public class TaskController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found with ID: " + taskId);
         }
 
-        Task updatedTask = taskService.editTask(task.get(), data.status());
+        Task updatedTask = taskService.editTask(task.get(), data);
 
         return ResponseEntity.ok(TaskMapper.toTaskResponseDTO(updatedTask));
     }
