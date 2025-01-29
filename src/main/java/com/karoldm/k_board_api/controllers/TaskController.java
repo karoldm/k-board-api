@@ -1,5 +1,7 @@
 package com.karoldm.k_board_api.controllers;
 
+import com.karoldm.k_board_api.dto.payload.AddMemberPayloadDTO;
+import com.karoldm.k_board_api.dto.payload.AddResponsiblePayloadDTO;
 import com.karoldm.k_board_api.dto.payload.TaskPayloadDTO;
 import com.karoldm.k_board_api.dto.response.ProjectResponseDTO;
 import com.karoldm.k_board_api.dto.response.TaskResponseDTO;
@@ -22,7 +24,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController()
-@RequestMapping("/project/{projectId}/task")
+@RequestMapping("/task")
 @AllArgsConstructor
 public class TaskController {
     private final TaskService taskService;
@@ -30,9 +32,9 @@ public class TaskController {
     private final ProjectService projectService;
 
     @PostMapping
-    public ResponseEntity<TaskResponseDTO> createTask(@PathVariable UUID projectId, @RequestBody @Valid TaskPayloadDTO data) {
-        checkProjectOwnershipOrParticipation(projectId);
-        Project project = getProjectOrThrow(projectId);
+    public ResponseEntity<TaskResponseDTO> createTask(@RequestBody @Valid TaskPayloadDTO data) {
+        checkProjectOwnershipOrParticipation(data.projectId());
+        Project project = getProjectOrThrow(data.projectId());
 
         Set<UUID> membersId = data.membersId();
         Set<User> members = new HashSet<>(userService.findAllUsersById(membersId));
@@ -50,7 +52,7 @@ public class TaskController {
         return ResponseEntity.ok(TaskMapper.toTaskResponseDTO(task));
     }
 
-    @GetMapping
+    @GetMapping("/{projectId}")
     public ResponseEntity<Set<TaskResponseDTO>> getAllTasksByProject(@PathVariable UUID projectId, @RequestParam Optional<UUID> memberId) {
         checkProjectOwnershipOrParticipation(projectId);
         Project project = getProjectOrThrow(projectId);
@@ -69,6 +71,30 @@ public class TaskController {
 
 
         return ResponseEntity.ok(responseTasks);
+    }
+
+    @PutMapping("/{taskId}/member")
+    public ResponseEntity<TaskResponseDTO> addMember(@PathVariable UUID taskId, @RequestBody @Valid AddResponsiblePayloadDTO data) {
+
+        Optional<Task> task = taskService.findTaskById(taskId);
+
+        if(task.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found with ID: " + taskId);
+        }
+
+        Set<UUID> membersId = data.membersId();
+        Set<User> members = new HashSet<>(userService.findAllUsersById(membersId));
+
+        Set<UUID> missingUserIds = membersId.stream()
+                .filter(memberId -> members.stream().noneMatch(user -> user.getId().equals(memberId)))
+                .collect(Collectors.toSet());
+
+        if (!missingUserIds.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Users not found with IDs: " + missingUserIds);
+        }
+
+        Task updatedTask = taskService.addMembersToTask(task.get(), members);
+        return ResponseEntity.ok(TaskMapper.toTaskResponseDTO(updatedTask));
     }
 
     private void checkProjectOwnershipOrParticipation(UUID projectId) {
