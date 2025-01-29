@@ -48,8 +48,8 @@ public class Project {
     @JsonBackReference
     private Set<User> members = new HashSet<>();
 
-    public void addMembers(Set<User> members) {
-        this.members.addAll(members);
+    public void addMember(User member) {
+        this.members.add(member);
     }
 
     public void removeMembers(Set<User> members){

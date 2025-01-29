@@ -2,8 +2,9 @@ package com.karoldm.k_board_api.controllers;
 
 import com.amazonaws.services.kms.model.NotFoundException;
 import com.amazonaws.services.pinpoint.model.ForbiddenException;
-import com.karoldm.k_board_api.dto.payload.AddMembersPayloadDTO;
+import com.karoldm.k_board_api.dto.payload.AddMemberPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.ProjectPayloadDTO;
+import com.karoldm.k_board_api.dto.payload.RemoveMembersPayloadDTO;
 import com.karoldm.k_board_api.dto.response.ProjectResponseDTO;
 import com.karoldm.k_board_api.entities.Project;
 import com.karoldm.k_board_api.entities.User;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -50,32 +52,25 @@ public class ProjectController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/{id}/members")
-    public ResponseEntity<ProjectResponseDTO> addMembers(@RequestBody AddMembersPayloadDTO addMemberDTO, @PathVariable UUID id) {
+    @PutMapping("/{id}/member")
+    public ResponseEntity<ProjectResponseDTO> addMembers(@RequestBody AddMemberPayloadDTO addMemberDTO, @PathVariable UUID id) {
         Project project = getProjectOrThrow(id);
-        checkProjectOwnership(id);
+        Optional<User> member = userService.findUserById(addMemberDTO.memberId());
 
-        Set<UUID> membersId = addMemberDTO.membersId();
-        List<User> users = userService.findAllUsersById(membersId);
-
-        Set<UUID> missingUserIds = membersId.stream()
-                .filter(memberId -> users.stream().noneMatch(user -> user.getId().equals(memberId)))
-                .collect(Collectors.toSet());
-
-        if (!missingUserIds.isEmpty()) {
-            throw new NotFoundException("Users not found with IDs: " + missingUserIds);
+        if (member.isEmpty()) {
+            throw new NotFoundException("User not found with ID: " + addMemberDTO.memberId());
         }
 
-        Project updatedProject = projectService.addMembersToProject(project, users);
+        Project updatedProject = projectService.addMemberToProject(project, member.get());
         return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(updatedProject));
     }
 
     @DeleteMapping("/{id}/members")
-    public ResponseEntity<ProjectResponseDTO> deleteMembers(@RequestBody AddMembersPayloadDTO addMemberDTO, @PathVariable UUID id) {
+    public ResponseEntity<ProjectResponseDTO> deleteMembers(@RequestBody RemoveMembersPayloadDTO removeMembersPayloadDTO, @PathVariable UUID id) {
         Project project = getProjectOrThrow(id);
         checkProjectOwnership(id);
 
-        Set<UUID> membersId = addMemberDTO.membersId();
+        Set<UUID> membersId = removeMembersPayloadDTO.membersId();
         List<User> users = userService.findAllUsersById(membersId);
 
         Set<UUID> missingUserIds = membersId.stream()
