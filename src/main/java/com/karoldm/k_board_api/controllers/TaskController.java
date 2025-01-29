@@ -83,17 +83,19 @@ public class TaskController {
         }
 
         Set<UUID> membersId = data.membersId();
-        Set<User> members = new HashSet<>(userService.findAllUsersById(membersId));
+        Project project = task.get().getProject();
+
+        Set<User> projectMembers = new HashSet<>(project.getMembers());
 
         Set<UUID> missingUserIds = membersId.stream()
-                .filter(memberId -> members.stream().noneMatch(user -> user.getId().equals(memberId)))
+                .filter(memberId -> projectMembers.stream().noneMatch(user -> user.getId().equals(memberId)))
                 .collect(Collectors.toSet());
 
         if (!missingUserIds.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Users not found with IDs: " + missingUserIds);
         }
 
-        Task updatedTask = taskService.addMembersToTask(task.get(), members);
+        Task updatedTask = taskService.addMembersToTask(task.get(), projectMembers);
         return ResponseEntity.ok(TaskMapper.toTaskResponseDTO(updatedTask));
     }
 
