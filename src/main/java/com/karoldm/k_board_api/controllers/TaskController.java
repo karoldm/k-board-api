@@ -1,10 +1,12 @@
 package com.karoldm.k_board_api.controllers;
 
 import com.karoldm.k_board_api.dto.payload.TaskPayloadDTO;
+import com.karoldm.k_board_api.dto.response.ProjectResponseDTO;
 import com.karoldm.k_board_api.dto.response.TaskResponseDTO;
 import com.karoldm.k_board_api.entities.Project;
 import com.karoldm.k_board_api.entities.Task;
 import com.karoldm.k_board_api.entities.User;
+import com.karoldm.k_board_api.mappers.ProjectMapper;
 import com.karoldm.k_board_api.mappers.TaskMapper;
 import com.karoldm.k_board_api.services.ProjectService;
 import com.karoldm.k_board_api.services.TaskService;
@@ -51,6 +53,18 @@ public class TaskController {
         return ResponseEntity.ok(TaskMapper.toTaskResponseDTO(task));
     }
 
+    @GetMapping
+    public ResponseEntity<Set<TaskResponseDTO>> getAllTasksByProject(@PathVariable UUID projectId) {
+        checkProjectOwnershipOrParticipation(projectId);
+        Project project = getProjectOrThrow(projectId);
+
+        Set<TaskResponseDTO> responseTasks = project.getTasks().stream()
+                .map(TaskMapper::toTaskResponseDTO)
+                .collect(Collectors.toSet());
+
+        return ResponseEntity.ok(responseTasks);
+    }
+
     private void checkProjectOwnershipOrParticipation(UUID projectId) {
         boolean isOwner = userService.getSessionUser().getProjects().stream().anyMatch(project -> project.getId().equals(projectId));
         boolean isMember = userService.getSessionUser().getParticipatedProjects().stream().anyMatch(project -> project.getId().equals(projectId));
@@ -58,7 +72,6 @@ public class TaskController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this project");
         }
     }
-
 
     private Project getProjectOrThrow(UUID projectId) {
         return projectService.findProjectById(projectId)
