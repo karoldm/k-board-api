@@ -2,7 +2,6 @@ package com.karoldm.k_board_api.services;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -23,8 +22,6 @@ public class TokenService {
                     .withSubject(email)
                     .withExpiresAt(generateExpirationDate())
                     .sign(algorithm);
-
-
         } catch(JWTCreationException exception) {
             throw new RuntimeException("Error while generating token: " + exception);
         }
@@ -37,11 +34,9 @@ public class TokenService {
                     .build()
                     .verify(token)
                     .getSubject();
-
     }
 
-    private Instant generateExpirationDate() {
+    public Instant generateExpirationDate() {
         return LocalDateTime.now(ZoneOffset.UTC).plusHours(2).toInstant(ZoneOffset.UTC);
     }
-
 }

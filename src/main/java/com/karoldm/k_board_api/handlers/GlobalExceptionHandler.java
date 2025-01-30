@@ -1,8 +1,6 @@
 package com.karoldm.k_board_api.handlers;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.karoldm.k_board_api.dto.response.ErrorResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,8 +14,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -80,6 +76,10 @@ public class GlobalExceptionHandler {
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
                 ex.getStatusCode().value(),
                 ex.getMessage()
+                        .replace("400 BAD_REQUEST ", "")
+                        .replace("404 NOT_FOUND ", "")
+                        .replace("403 FORBIDDEN ", "")
+                        .replaceAll("\"", "")
         );
 
         return new ResponseEntity<>(errorResponse, ex.getStatusCode());

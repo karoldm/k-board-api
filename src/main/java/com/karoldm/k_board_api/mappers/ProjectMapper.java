@@ -19,6 +19,7 @@ public class ProjectMapper {
                     project.getId(),
                     project.getTitle(),
                     project.getCreatedAt(),
+                    UserMapper.toUserResponseDTO(project.getOwner()),
                     userDTOs
             );
         }

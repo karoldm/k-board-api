@@ -4,9 +4,6 @@ package com.karoldm.k_board_api.services;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import lombok.AllArgsConstructor;
-
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
