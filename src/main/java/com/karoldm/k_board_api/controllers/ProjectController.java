@@ -30,9 +30,10 @@ public class ProjectController {
     private final ProjectService projectService;
     private final UserService userService;
 
-    @PostMapping
+    @PostMapping()
     public ResponseEntity<ProjectResponseDTO> createProject(@RequestBody @Valid ProjectPayloadDTO data) {
-        Project project = projectService.createProject(data, userService.getSessionUser());
+        User userLogged = userService.getSessionUser();
+        Project project = projectService.createProject(data, userLogged);
         return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(project));
     }
 
@@ -117,7 +118,7 @@ public class ProjectController {
         }
     }
 
-    private Project getProjectOrThrow(UUID projectId) {
+    public Project getProjectOrThrow(UUID projectId) {
         return projectService.findProjectById(projectId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found with id: " + projectId));
     }

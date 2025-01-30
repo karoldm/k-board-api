@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -40,10 +39,6 @@ public class UserService {
         user.setPhotoUrl(photoKey);
 
         return userRepository.save(user);
-    }
-
-    public Optional<User> findUserById(UUID id) {
-        return userRepository.findById(id);
     }
 
     public List<User> findAllUsersById(Set<UUID> ids) {
