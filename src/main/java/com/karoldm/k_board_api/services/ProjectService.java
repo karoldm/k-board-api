@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 @Service
@@ -26,7 +26,7 @@ public class ProjectService {
     public Project createProject(ProjectPayloadDTO projectDTO, User loggedUser) {
         Project project = new Project();
 
-        project.setCreatedAt(LocalDate.now());
+        project.setCreatedAt(OffsetDateTime.now());
         project.setTitle(projectDTO.title());
         project.setOwner(loggedUser);
         project.setTasks(new HashSet<>());

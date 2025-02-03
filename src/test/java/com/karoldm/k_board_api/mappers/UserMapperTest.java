@@ -3,7 +3,8 @@ package com.karoldm.k_board_api.mappers;
 import com.karoldm.k_board_api.dto.response.UserResponseDTO;
 import com.karoldm.k_board_api.entities.User;
 import org.junit.jupiter.api.Test;
-import java.time.LocalDate;
+
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,7 +17,7 @@ public class UserMapperTest {
         String name = "John";
         String email = "john.doe@example.com";
         String photoUrl = "photo_url";
-        LocalDate createdAt = LocalDate.now();
+        OffsetDateTime createdAt = OffsetDateTime.now();
 
         User user = new User();
         user.setId(userId);
