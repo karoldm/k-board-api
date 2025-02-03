@@ -3,12 +3,18 @@ package com.karoldm.k_board_api.controllers;
 import com.karoldm.k_board_api.dto.payload.AddMemberPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.ProjectPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.RemoveMembersPayloadDTO;
+import com.karoldm.k_board_api.dto.response.ErrorResponseDTO;
 import com.karoldm.k_board_api.dto.response.ProjectResponseDTO;
 import com.karoldm.k_board_api.entities.Project;
 import com.karoldm.k_board_api.entities.User;
 import com.karoldm.k_board_api.mappers.ProjectMapper;
 import com.karoldm.k_board_api.services.ProjectService;
 import com.karoldm.k_board_api.services.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,13 +37,26 @@ public class ProjectController {
     private final UserService userService;
 
     @PostMapping()
+    @Operation(
+            summary = "Create new project")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "created successfully"),
+            @ApiResponse(responseCode = "400", description = "invalid body data", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+    })
     public ResponseEntity<ProjectResponseDTO> createProject(@RequestBody @Valid ProjectPayloadDTO data) {
         User userLogged = userService.getSessionUser();
         Project project = projectService.createProject(data, userLogged);
-        return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(project));
+        return ResponseEntity.status (HttpStatus.CREATED).body(ProjectMapper.toProjectResponseDTO(project));
     }
 
     @GetMapping("/owner")
+    @Operation(
+            summary = "List all projects that user is owner")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "get successfully"),
+            @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+    })
     public ResponseEntity<List<ProjectResponseDTO>> getAllProjectsByUser() {
         Set<Project> projects = userService.getSessionUser().getProjects();
 
@@ -49,6 +68,12 @@ public class ProjectController {
     }
 
     @GetMapping("/member")
+    @Operation(
+            summary = "List all projects that user is member")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "get successfully"),
+            @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+    })
     public ResponseEntity<List<ProjectResponseDTO>> getAllProjectsByUserParticipation() {
         Set<Project> projects = userService.getSessionUser().getParticipatedProjects();
 
@@ -60,6 +85,13 @@ public class ProjectController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(
+            summary = "Delete a project by id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "deleted successfully"),
+            @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "the user is not project's owner", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+    })
     public ResponseEntity<Void> deleteProject(@PathVariable UUID id) {
         checkProjectOwnership(id);
         Project project = getProjectOrThrow(id);
@@ -73,6 +105,14 @@ public class ProjectController {
     }
 
     @PutMapping("/member")
+    @Operation(
+            summary = "Add user to a project as member")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "added successfully"),
+            @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "project not found with the id", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "invalid body data", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+    })
     public ResponseEntity<ProjectResponseDTO> addMember(@RequestBody @Valid AddMemberPayloadDTO data) {
         Project project = getProjectOrThrow(data.projectId());
         User member = userService.getSessionUser();
@@ -86,6 +126,14 @@ public class ProjectController {
     }
 
     @DeleteMapping("/{id}/members")
+    @Operation(
+            summary = "remove members from a project")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "removed successfully"),
+            @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "user is not project's owner", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "invalid body data", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+    })
     public ResponseEntity<ProjectResponseDTO> deleteMembers(@RequestBody @Valid RemoveMembersPayloadDTO removeMembersPayloadDTO, @PathVariable UUID id) {
         Project project = getProjectOrThrow(id);
         checkProjectOwnership(id);
@@ -106,6 +154,14 @@ public class ProjectController {
     }
 
     @PutMapping("/{id}")
+    @Operation(
+            summary = "edit project's data")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "edited successfully"),
+            @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "user is not project's owner", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "invalid body data", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+    })
     public ResponseEntity<ProjectResponseDTO> updateProject(@RequestBody @Valid ProjectPayloadDTO data, @PathVariable UUID id) {
         checkProjectOwnership(id);
         Project updatedProject = projectService.updateProject(data.title(), id);
