@@ -1,13 +1,12 @@
 package com.karoldm.k_board_api.mappers;
 
 import com.karoldm.k_board_api.dto.response.TaskResponseDTO;
-import com.karoldm.k_board_api.dto.response.UserResponseDTO;
 import com.karoldm.k_board_api.entities.Task;
 import com.karoldm.k_board_api.entities.User;
 import com.karoldm.k_board_api.enums.TaskStatus;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -22,7 +21,7 @@ public class TaskMapperTest {
         String name = "John";
         String email = "john.doe@example.com";
         String photoUrl = "photo_url";
-        LocalDate createdAt = LocalDate.now();
+        OffsetDateTime createdAt = OffsetDateTime.now();
 
         User mockUser = new User();
         mockUser.setId(userId);

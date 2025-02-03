@@ -11,7 +11,7 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -33,7 +33,7 @@ public class TaskService {
         task.setTitle(data.title());
         task.setColor(data.color());
 
-        task.setCreatedAt(LocalDate.now());
+        task.setCreatedAt(OffsetDateTime.now());
         task.setStatus(TaskStatus.PENDING.toString());
 
         task.setProject(project);

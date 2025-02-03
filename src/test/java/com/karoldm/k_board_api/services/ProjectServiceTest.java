@@ -1,9 +1,7 @@
 package com.karoldm.k_board_api.services;
 
-import com.amazonaws.services.kms.model.NotFoundException;
 import com.karoldm.k_board_api.entities.Project;
 import com.karoldm.k_board_api.entities.User;
-import com.karoldm.k_board_api.handlers.GlobalExceptionHandler;
 import com.karoldm.k_board_api.repositories.ProjectRepository;
 import com.karoldm.k_board_api.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;

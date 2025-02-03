@@ -1,6 +1,7 @@
 package com.karoldm.k_board_api.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.karoldm.k_board_api.dto.payload.LoginPayloadDTO;
 import com.karoldm.k_board_api.dto.response.LoginResponseDTO;
@@ -25,7 +26,9 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,7 +58,8 @@ public class AuthControllerTest {
     @BeforeEach
     void setUp() {
         objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         mockMvc = MockMvcBuilders.standaloneSetup(authController)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -69,7 +73,7 @@ public class AuthControllerTest {
         user.setPassword(password);
         user.setName(name);
         user.setId(id);
-        user.setCreatedAt(LocalDate.now());
+        user.setCreatedAt(OffsetDateTime.now(ZoneOffset.UTC));
         user.setPhotoUrl("photo_url");
         return user;
     }

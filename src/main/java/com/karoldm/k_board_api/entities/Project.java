@@ -2,14 +2,11 @@ package com.karoldm.k_board_api.entities;
 
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.io.Serial;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -28,7 +25,7 @@ public class Project {
     @NotEmpty(message = "title cannot be empty")
     private String title;
 
-    private LocalDate createdAt;
+    private OffsetDateTime createdAt;
 
     @OneToMany(mappedBy = "project", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonBackReference

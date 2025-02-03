@@ -2,6 +2,7 @@ package com.karoldm.k_board_api.controllers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.karoldm.k_board_api.dto.payload.AddMemberPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.ProjectPayloadDTO;
@@ -23,11 +24,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.OffsetDateTime;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -57,7 +55,8 @@ class ProjectControllerTest {
     @BeforeEach
     void setUp() {
         objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         mockMvc = MockMvcBuilders.standaloneSetup(projectController)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -106,7 +105,7 @@ class ProjectControllerTest {
     @Test
     void shouldCreateProjectSuccessfully() throws Exception {
         String title = "project title";
-        LocalDate createdAt = LocalDate.now();
+        OffsetDateTime createdAt = OffsetDateTime.now();
         UUID projectId = UUID.randomUUID();
 
         ProjectPayloadDTO payload = new ProjectPayloadDTO(title);
@@ -156,16 +155,16 @@ class ProjectControllerTest {
         user.setEmail("user@example.com");
         user.setPassword("1234");
         user.setName("John");
-        user.setCreatedAt(LocalDate.now());
+        user.setCreatedAt(OffsetDateTime.now());
         user.setPhotoUrl("photo_url");
         return user;
     }
 
     private Project createProjectMock(User owner, UUID projectId) {
-        return createProjectMock(owner, projectId, "default title", LocalDate.now());
+        return createProjectMock(owner, projectId, "default title", OffsetDateTime.now());
     }
 
-    private Project createProjectMock(User owner, UUID projectId, String title, LocalDate createdAt) {
+    private Project createProjectMock(User owner, UUID projectId, String title, OffsetDateTime createdAt) {
         Project project = new Project();
         project.setId(projectId);
         project.setTitle(title);

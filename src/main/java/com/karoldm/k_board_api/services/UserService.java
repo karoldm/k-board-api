@@ -9,7 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -27,7 +27,7 @@ public class UserService {
     @Transactional
     public User createUser(RegisterPayloadDTO data) {
         String encryptedPassword = new BCryptPasswordEncoder().encode(data.password());
-        LocalDate createdAt = LocalDate.now();
+        OffsetDateTime createdAt = OffsetDateTime.now();
 
         String photoKey = storageService.upload(data.photo());
 

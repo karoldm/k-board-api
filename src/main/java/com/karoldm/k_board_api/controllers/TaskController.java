@@ -1,15 +1,12 @@
 package com.karoldm.k_board_api.controllers;
 
-import com.karoldm.k_board_api.dto.payload.AddMemberPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.AddResponsiblePayloadDTO;
 import com.karoldm.k_board_api.dto.payload.EditTaskPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.TaskPayloadDTO;
-import com.karoldm.k_board_api.dto.response.ProjectResponseDTO;
 import com.karoldm.k_board_api.dto.response.TaskResponseDTO;
 import com.karoldm.k_board_api.entities.Project;
 import com.karoldm.k_board_api.entities.Task;
 import com.karoldm.k_board_api.entities.User;
-import com.karoldm.k_board_api.mappers.ProjectMapper;
 import com.karoldm.k_board_api.mappers.TaskMapper;
 import com.karoldm.k_board_api.services.ProjectService;
 import com.karoldm.k_board_api.services.TaskService;

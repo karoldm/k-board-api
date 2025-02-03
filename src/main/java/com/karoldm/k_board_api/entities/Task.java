@@ -1,13 +1,11 @@
 package com.karoldm.k_board_api.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.karoldm.k_board_api.enums.TaskStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 @AllArgsConstructor
@@ -27,7 +25,7 @@ public class Task {
     @NotEmpty(message = "description cannot be empty")
     private String description;
 
-    private LocalDate createdAt;
+    private OffsetDateTime createdAt;
 
     @NotEmpty(message = "status cannot be empty")
     private String status;

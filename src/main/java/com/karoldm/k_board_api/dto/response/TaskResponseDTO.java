@@ -1,8 +1,6 @@
 package com.karoldm.k_board_api.dto.response;
 
-import com.karoldm.k_board_api.enums.TaskStatus;
-
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -10,7 +8,7 @@ public record TaskResponseDTO(
         UUID id,
         String title,
         String description,
-        LocalDate createdAt,
+        OffsetDateTime createdAt,
         String status,
         String color,
         Set<String> tags,

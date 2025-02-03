@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 @Service
@@ -37,6 +37,6 @@ public class TokenService {
     }
 
     public Instant generateExpirationDate() {
-        return LocalDateTime.now(ZoneOffset.UTC).plusHours(2).toInstant(ZoneOffset.UTC);
+        return OffsetDateTime.now(ZoneOffset.UTC).plusHours(2).toInstant();
     }
 }
