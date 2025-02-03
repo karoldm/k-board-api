@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.karoldm.k_board_api.dto.payload.LoginPayloadDTO;
+import com.karoldm.k_board_api.dto.payload.RegisterPayloadDTO;
 import com.karoldm.k_board_api.dto.response.LoginResponseDTO;
 import com.karoldm.k_board_api.entities.User;
 import com.karoldm.k_board_api.handlers.GlobalExceptionHandler;
@@ -27,12 +28,13 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.TimeZone;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -57,8 +59,7 @@ public class AuthControllerTest {
     @BeforeEach
     void setUp() {
         objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        //objectMapper.setTimeZone(TimeZone.getTimeZone("UTC"));
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
         mockMvc = MockMvcBuilders.standaloneSetup(authController)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -72,8 +73,8 @@ public class AuthControllerTest {
         user.setPassword(password);
         user.setName(name);
         user.setId(id);
-        user.setCreatedAt(OffsetDateTime.now(ZoneOffset.UTC));
-        user.setPhotoUrl("photo_url");
+        user.setPhotoUrl("");
+        user.setCreatedAt(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS));
         return user;
     }
 
@@ -102,7 +103,7 @@ public class AuthControllerTest {
                 .andExpect(jsonPath("$.user.id").value(userId.toString()))
                 .andExpect(jsonPath("$.user.name").value("John"))
                 .andExpect(jsonPath("$.user.email").value(email))
-                .andExpect(jsonPath("$.user.photoUrl").value("photo_url"))
+                .andExpect(jsonPath("$.user.photoUrl").value(""))
                 .andReturn();
 
         LoginResponseDTO loginResponse = objectMapper.readValue(result.getResponse().getContentAsString(), LoginResponseDTO.class);
@@ -128,4 +129,51 @@ public class AuthControllerTest {
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.message").value(expectedMessage));
     }
+
+    @Test
+    public void shouldReturnBadRequestIfEmailExist() throws Exception {
+        String email = "user@example.com";
+        String password = "1234";
+        String name = "john";
+        UUID userId = UUID.randomUUID();
+        User userMock = createMockUser(email, password, name, userId);
+
+        when(userService.findUserByEmail(email)).thenReturn(userMock);
+
+        mockMvc.perform(multipart("/auth/register")
+                        .param("email", email)
+                        .param("name", name)
+                        .param("password", password)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Email already registered."));
+    }
+
+    @Test
+    public void shuldRegisterUserSuccessfully() throws Exception {
+        String email = "user@example.com";
+        String password = "1234";
+        String name = "john";
+        UUID userId = UUID.randomUUID();
+        User userMock = createMockUser(email, password, name, userId);
+
+        RegisterPayloadDTO payloadDTO = new RegisterPayloadDTO(name, email, password, null);
+
+        when(userService.findUserByEmail(email)).thenReturn(null);
+        when(userService.createUser(payloadDTO)).thenReturn(userMock);
+
+        mockMvc.perform(multipart("/auth/register")
+                        .param("email", payloadDTO.email())
+                        .param("name", payloadDTO.name())
+                        .param("password", payloadDTO.password())
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(userMock.getId().toString()))
+                .andExpect(jsonPath("$.name").value(userMock.getName()))
+                .andExpect(jsonPath("$.email").value(userMock.getEmail()))
+                .andExpect(jsonPath("$.photoUrl").value(""))
+                .andExpect(jsonPath("$.createdAt").value(userMock.getCreatedAt().truncatedTo(ChronoUnit.MILLIS).toString()));
+    }
+
 }

@@ -23,8 +23,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,8 +56,7 @@ class ProjectControllerTest {
     @BeforeEach
     void setUp() {
         objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        objectMapper.setTimeZone(TimeZone.getTimeZone("UTC"));
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
         mockMvc = MockMvcBuilders.standaloneSetup(projectController)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -105,26 +105,22 @@ class ProjectControllerTest {
     @Test
     void shouldCreateProjectSuccessfully() throws Exception {
         String title = "project title";
-        OffsetDateTime createdAt = OffsetDateTime.now();
         UUID projectId = UUID.randomUUID();
 
         ProjectPayloadDTO payload = new ProjectPayloadDTO(title);
-        Project projectMock = createProjectMock(userMock, projectId, title, createdAt);
+        Project projectMock = createProjectMock(userMock, projectId, title);
 
         when(projectService.createProject(payload, userMock)).thenReturn(projectMock);
 
-        MvcResult result = mockMvc.perform(post(PROJECT_ENDPOINT)
+        mockMvc.perform(post(PROJECT_ENDPOINT)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value(title))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title").value(projectMock.getTitle()))
+                .andExpect(jsonPath("$.createdAt").value(projectMock.getCreatedAt().toString()))
                 .andExpect(jsonPath("$.owner.id").value(userMock.getId().toString()))
                 .andExpect(jsonPath("$.id").value(projectId.toString()))
-                .andExpect(jsonPath("$.members").isArray())
-                .andReturn();
-
-        ProjectResponseDTO response = objectMapper.readValue(result.getResponse().getContentAsString(), ProjectResponseDTO.class);
-        assertEquals(createdAt, response.createdAt());
+                .andExpect(jsonPath("$.members").isArray());
 
         verify(projectService).createProject(payload, userMock);
     }
@@ -148,7 +144,6 @@ class ProjectControllerTest {
                 .andExpect(jsonPath("$.message").value("User is project's owner."));
     }
 
-    // Métodos auxiliares para reduzir repetição
     private User createUserMock() {
         User user = new User();
         user.setId(UUID.randomUUID());
@@ -161,14 +156,14 @@ class ProjectControllerTest {
     }
 
     private Project createProjectMock(User owner, UUID projectId) {
-        return createProjectMock(owner, projectId, "default title", OffsetDateTime.now());
+        return createProjectMock(owner, projectId, "default title");
     }
 
-    private Project createProjectMock(User owner, UUID projectId, String title, OffsetDateTime createdAt) {
+    private Project createProjectMock(User owner, UUID projectId, String title) {
         Project project = new Project();
         project.setId(projectId);
         project.setTitle(title);
-        project.setCreatedAt(createdAt);
+        project.setCreatedAt(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS));
         project.setOwner(owner);
         return project;
     }

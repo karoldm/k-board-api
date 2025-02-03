@@ -69,7 +69,7 @@ public class AuthController {
     public ResponseEntity<?> registerUser(@ModelAttribute @Valid RegisterPayloadDTO data) {
 
         if(userService.findUserByEmail(data.email()) != null){
-            return ResponseEntity.badRequest().body("Email already registered.");
+            return ResponseEntity.badRequest().body(new ErrorResponseDTO(HttpStatus.BAD_REQUEST.value(), "Email already registered."));
         }
 
         User user = userService.createUser(data);
