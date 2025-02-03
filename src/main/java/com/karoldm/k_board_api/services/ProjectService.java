@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -26,7 +28,7 @@ public class ProjectService {
     public Project createProject(ProjectPayloadDTO projectDTO, User loggedUser) {
         Project project = new Project();
 
-        project.setCreatedAt(OffsetDateTime.now());
+        project.setCreatedAt(OffsetDateTime.now(ZoneOffset.UTC));
         project.setTitle(projectDTO.title());
         project.setOwner(loggedUser);
         project.setTasks(new HashSet<>());

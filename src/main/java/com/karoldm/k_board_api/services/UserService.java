@@ -10,6 +10,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -27,7 +29,7 @@ public class UserService {
     @Transactional
     public User createUser(RegisterPayloadDTO data) {
         String encryptedPassword = new BCryptPasswordEncoder().encode(data.password());
-        OffsetDateTime createdAt = OffsetDateTime.now();
+        OffsetDateTime createdAt = OffsetDateTime.now(ZoneOffset.UTC);
 
         String photoKey = storageService.upload(data.photo());
 
