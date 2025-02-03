@@ -69,7 +69,10 @@ public class SecurityFilter extends OncePerRequestFilter {
 
     private boolean isPublicRoute(HttpServletRequest request) {
         String uri = request.getRequestURI();
-        return uri.equals("/auth/login") || uri.equals("/auth/register");
+        return uri.equals("/auth/login") ||
+                uri.equals("/auth/register") ||
+                uri.startsWith("/swagger-ui") ||
+                uri.startsWith("/v3/api-docs");
     }
 
     private String recoverToken(HttpServletRequest request){

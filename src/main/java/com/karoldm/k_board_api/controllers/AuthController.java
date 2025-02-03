@@ -9,6 +9,7 @@ import com.karoldm.k_board_api.services.TokenService;
 import com.karoldm.k_board_api.services.UserService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springdoc.core.annotations.RouterOperation;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
