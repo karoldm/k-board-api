@@ -176,4 +176,22 @@ public class AuthControllerTest {
                 .andExpect(jsonPath("$.createdAt").value(userMock.getCreatedAt().truncatedTo(ChronoUnit.MILLIS).toString()));
     }
 
+    @Test
+    void shouldReturnBadRequestForInvalidRegister() throws Exception {
+        testBadRequestOnRegister(new RegisterPayloadDTO("name", "", "1234", null), "Email cannot be empty\r\n");
+        testBadRequestOnRegister(new RegisterPayloadDTO("name", "email123", "1234", null), "Invalid email format\r\n");
+        testBadRequestOnRegister(new RegisterPayloadDTO("name", "", "1234", null), "Email cannot be empty\r\n");
+        testBadRequestOnRegister(new RegisterPayloadDTO("name", "email@teste.com", "", null), "Password cannot be empty\r\n");
+    }
+
+    private void testBadRequestOnRegister(RegisterPayloadDTO payloadDTO, String expectedMessage) throws Exception {
+        mockMvc.perform(multipart("/auth/register")
+                        .param("email", payloadDTO.email())
+                        .param("name", payloadDTO.name())
+                        .param("password", payloadDTO.password())
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value(expectedMessage));
+    }
 }
