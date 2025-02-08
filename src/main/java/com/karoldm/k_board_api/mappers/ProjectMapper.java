@@ -3,6 +3,7 @@ package com.karoldm.k_board_api.mappers;
 import com.karoldm.k_board_api.dto.response.ProjectResponseDTO;
 import com.karoldm.k_board_api.dto.response.UserResponseDTO;
 import com.karoldm.k_board_api.entities.Project;
+import com.karoldm.k_board_api.utils.ProjectProgress;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,7 +21,8 @@ public class ProjectMapper {
                     project.getTitle(),
                     project.getCreatedAt(),
                     UserMapper.toUserResponseDTO(project.getOwner()),
-                    userDTOs
+                    userDTOs,
+                    ProjectProgress.calculeProgress(project.getTasks())
             );
         }
 }

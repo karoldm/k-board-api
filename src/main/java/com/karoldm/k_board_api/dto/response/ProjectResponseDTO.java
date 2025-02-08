@@ -12,6 +12,7 @@ public record ProjectResponseDTO(
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
         OffsetDateTime createdAt,
         UserResponseDTO owner,
-        Set<UserResponseDTO> members
+        Set<UserResponseDTO> members,
+        double progress
 ) {
 }
