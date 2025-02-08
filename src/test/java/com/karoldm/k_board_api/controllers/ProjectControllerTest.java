@@ -120,7 +120,8 @@ class ProjectControllerTest {
                 .andExpect(jsonPath("$.createdAt").value(projectMock.getCreatedAt().toString()))
                 .andExpect(jsonPath("$.owner.id").value(userMock.getId().toString()))
                 .andExpect(jsonPath("$.id").value(projectId.toString()))
-                .andExpect(jsonPath("$.members").isArray());
+                .andExpect(jsonPath("$.members").isArray())
+                .andExpect(jsonPath("$.progress").value(0.0));
 
         verify(projectService).createProject(payload, userMock);
     }

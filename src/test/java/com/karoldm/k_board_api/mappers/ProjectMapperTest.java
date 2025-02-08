@@ -55,5 +55,6 @@ public class ProjectMapperTest {
                 membersProject.stream().map(UserMapper::toUserResponseDTO).collect(Collectors.toSet()),
                 projectResponseDTO.members()
         );
+        assertEquals(0.0, projectResponseDTO.progress());
     }
 }
