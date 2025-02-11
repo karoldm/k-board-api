@@ -13,7 +13,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -39,25 +38,23 @@ public class ProjectService {
     @Transactional
     public Project addMemberToProject(Project project, User member) {
         project.addMember(member);
-        projectRepository.save(project);
         member.addProjectParticipated(project);
         userRepository.save(member);
 
-        return project;
+        return projectRepository.save(project);
     }
 
     @Transactional
     public Project deleteMembersToProject(Project project, List<User> members) {
 
         project.removeMembers(new HashSet<>(members));
-        projectRepository.save(project);
 
         for (User member : members) {
             member.removeProjectParticipated(project);
         }
         userRepository.saveAll(members);
 
-        return project;
+        return projectRepository.save(project);
     }
 
     @Transactional
