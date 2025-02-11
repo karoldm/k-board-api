@@ -78,5 +78,9 @@ API de Gerenciamento de Projetos e Tarefas em um Quadro Kanban! Esta API foi des
 ![Modelagem](/doc/model.jpg)
 
 
+## Deploy
+Em progresso...
+
+
 ## Contribuição
 Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull request ❤️
