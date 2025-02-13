@@ -137,7 +137,7 @@ class ProjectControllerTest {
 
         when(projectService.findProjectById(projectOwnerId)).thenReturn(Optional.of(projectOwnerMock));
 
-        mockMvc.perform(put(MEMBER_ENDPOINT)
+        mockMvc.perform(post(MEMBER_ENDPOINT)
                         .content(objectMapper.writeValueAsString(payloadDTO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
