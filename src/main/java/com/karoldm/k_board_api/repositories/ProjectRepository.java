@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.UUID;
 
 public interface ProjectRepository extends JpaRepository<Project, UUID> {
-    Page<Project> findByOwner(User owner, Pageable pageable);
+    Page<Project> findByOwnerAndTitleContainingIgnoreCase(User owner, String filter, Pageable pageable);
 
-    Page<Project> findByMembersContains(User member, Pageable pageable);
+    Page<Project> findByMembersContainsAndTitleContainingIgnoreCase(User member, String filter, Pageable pageable);
 }

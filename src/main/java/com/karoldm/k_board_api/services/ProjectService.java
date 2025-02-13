@@ -80,7 +80,8 @@ public class ProjectService {
     }
 
     @Transactional
-    public Page<ProjectResponseDTO> getAllProjectsByUser(User user, int page, int size, String sortBy, String direction) {
+    public Page<ProjectResponseDTO> getAllProjectsByUser(
+            User user, String filter, int page, int size, String sortBy, String direction) {
 
         Sort sort = direction.equalsIgnoreCase("desc")
                 ? Sort.by(sortBy).descending()
@@ -88,12 +89,14 @@ public class ProjectService {
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<Project> projectPage = projectRepository.findByOwner(user, pageable);
+        Page<Project> projectPage = projectRepository.findByOwnerAndTitleContainingIgnoreCase(
+                user, filter, pageable);
 
         return projectPage.map(ProjectMapper::toProjectResponseDTO);
     }
 
-    public Page<ProjectResponseDTO> getAllProjectsByUserParticipation(User user, int page, int size, String sortBy, String direction) {
+    public Page<ProjectResponseDTO> getAllProjectsByUserParticipation(
+            User user, String filter, int page, int size, String sortBy, String direction) {
 
         Sort sort = direction.equalsIgnoreCase("desc")
                 ? Sort.by(sortBy).descending()
@@ -101,7 +104,8 @@ public class ProjectService {
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<Project> projectPage = projectRepository.findByMembersContains(user, pageable);
+        Page<Project> projectPage = projectRepository
+                .findByMembersContainsAndTitleContainingIgnoreCase(user, filter, pageable);
 
         return projectPage.map(ProjectMapper::toProjectResponseDTO);
     }
