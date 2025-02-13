@@ -59,6 +59,7 @@ public class ProjectController {
             @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
     public ResponseEntity<Page<ProjectResponseDTO>>  getAllProjectsByUser(
+            @RequestParam(defaultValue = "") String filter,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
@@ -66,8 +67,7 @@ public class ProjectController {
         User user = userService.getSessionUser();
 
         Page<ProjectResponseDTO> responseProjects = projectService
-                .getAllProjectsByUser(user, page, size, sortBy, direction)
-             ;
+                .getAllProjectsByUser(user, filter, page, size, sortBy, direction);
 
         return ResponseEntity.ok(responseProjects);
     }
@@ -80,13 +80,15 @@ public class ProjectController {
             @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
     public ResponseEntity<Page<ProjectResponseDTO>> getAllProjectsByUserParticipation(
+            @RequestParam(defaultValue = "") String filter,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String direction) {
         User user = userService.getSessionUser();
 
-        Page<ProjectResponseDTO> responseProjects = projectService.getAllProjectsByUserParticipation(user, page, size, sortBy, direction);
+        Page<ProjectResponseDTO> responseProjects = projectService
+                .getAllProjectsByUserParticipation(user, filter, page, size, sortBy, direction);
         return ResponseEntity.ok(responseProjects);
     }
 
