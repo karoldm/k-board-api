@@ -89,6 +89,7 @@ public class ProjectController {
 
         Page<ProjectResponseDTO> responseProjects = projectService
                 .getAllProjectsByUserParticipation(user, filter, page, size, sortBy, direction);
+
         return ResponseEntity.ok(responseProjects);
     }
 

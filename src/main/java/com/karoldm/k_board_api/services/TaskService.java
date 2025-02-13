@@ -20,9 +20,7 @@ import org.springframework.stereotype.Service;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -74,22 +72,17 @@ public class TaskService {
     }
 
 
-    public Page<TaskResponseDTO> getTasksByProject(Project project, Optional<UUID> memberId, int page, int size, String sortBy, String direction) {
-
-        Sort sort = direction.equalsIgnoreCase("desc")
-                ? Sort.by(sortBy).descending()
-                : Sort.by(sortBy).ascending();
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Page<Task> taskPage;
+    public List<TaskResponseDTO> getTasksByProject(Project project, Optional<UUID> memberId) {
+        List<Task> tasks;
 
         if (memberId.isPresent()) {
-            taskPage = taskRepository.findByProjectAndResponsibleContaining(project, memberId.get(), pageable);
+            tasks = taskRepository.findByProjectAndResponsibleContaining(project, memberId.get());
         } else {
-            taskPage = taskRepository.findByProject(project, pageable);
+            tasks = taskRepository.findByProject(project);
         }
 
-        return taskPage.map(TaskMapper::toTaskResponseDTO);
+        tasks.sort(Comparator.comparing(Task::getCreatedAt));
+
+        return tasks.stream().map(TaskMapper::toTaskResponseDTO).toList();
     }
 }
