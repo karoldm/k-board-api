@@ -61,8 +61,7 @@ public class ProjectController {
         Set<Project> projects = userService.getSessionUser().getProjects();
 
         List<ProjectResponseDTO> responseProjects = projects.stream()
-                .map(ProjectMapper::toProjectResponseDTO)
-                .collect(Collectors.toList());
+                .map(ProjectMapper::toProjectResponseDTO).sorted((a, b) -> b.createdAt().compareTo(a.createdAt())).collect(Collectors.toList());
 
         return ResponseEntity.ok(responseProjects);
     }
@@ -79,7 +78,7 @@ public class ProjectController {
 
         List<ProjectResponseDTO> responseProjects = projects.stream()
                 .map(ProjectMapper::toProjectResponseDTO)
-                .collect(Collectors.toList());
+                .sorted((a, b) -> b.createdAt().compareTo(a.createdAt())).collect(Collectors.toList());;
 
         return ResponseEntity.ok(responseProjects);
     }

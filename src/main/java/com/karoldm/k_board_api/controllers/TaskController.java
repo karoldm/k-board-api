@@ -73,22 +73,21 @@ public class TaskController {
             @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "403", description = "user is not owner neither member of the project", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
-    public ResponseEntity<Set<TaskResponseDTO>> getAllTasksByProject(@PathVariable UUID projectId, @RequestParam Optional<UUID> memberId) {
+    public ResponseEntity<List<TaskResponseDTO>> getAllTasksByProject(@PathVariable UUID projectId, @RequestParam Optional<UUID> memberId) {
         checkProjectOwnershipOrParticipation(projectId);
         Project project = getProjectOrThrow(projectId);
 
-        Set<TaskResponseDTO> responseTasks = project.getTasks().stream()
+        List<TaskResponseDTO> responseTasks = project.getTasks().stream()
                 .map(TaskMapper::toTaskResponseDTO)
-                .collect(Collectors.toSet());
+                .sorted((a, b) -> b.createdAt().compareTo(a.createdAt())).collect(Collectors.toList());
 
         if(memberId.isPresent()){
             responseTasks = responseTasks.stream()
                     .filter(task -> task.members()
                             .stream()
                             .anyMatch(responsible -> responsible.id() == memberId.get()))
-                    .collect(Collectors.toSet());
+                    .sorted((a, b) -> b.createdAt().compareTo(a.createdAt())).collect(Collectors.toList());
         }
-
 
         return ResponseEntity.ok(responseTasks);
     }
