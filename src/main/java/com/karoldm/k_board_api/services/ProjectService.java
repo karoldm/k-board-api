@@ -1,12 +1,18 @@
 package com.karoldm.k_board_api.services;
 
 import com.karoldm.k_board_api.dto.payload.ProjectPayloadDTO;
+import com.karoldm.k_board_api.dto.response.ProjectResponseDTO;
 import com.karoldm.k_board_api.entities.Project;
 import com.karoldm.k_board_api.entities.User;
+import com.karoldm.k_board_api.mappers.ProjectMapper;
 import com.karoldm.k_board_api.repositories.ProjectRepository;
 import com.karoldm.k_board_api.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -71,5 +77,32 @@ public class ProjectService {
     @Transactional
     public void deleteProject(UUID id) {
         projectRepository.deleteById(id);
+    }
+
+    @Transactional
+    public Page<ProjectResponseDTO> getAllProjectsByUser(User user, int page, int size, String sortBy, String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Project> projectPage = projectRepository.findByOwner(user, pageable);
+
+        return projectPage.map(ProjectMapper::toProjectResponseDTO);
+    }
+
+    public Page<ProjectResponseDTO> getAllProjectsByUserParticipation(User user, int page, int size, String sortBy, String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Project> projectPage = projectRepository.findByMembersContains(user, pageable);
+
+        return projectPage.map(ProjectMapper::toProjectResponseDTO);
     }
 }

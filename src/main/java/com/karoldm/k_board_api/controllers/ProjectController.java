@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -57,11 +58,16 @@ public class ProjectController {
             @ApiResponse(responseCode = "200", description = "get successfully"),
             @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
-    public ResponseEntity<List<ProjectResponseDTO>> getAllProjectsByUser() {
-        Set<Project> projects = userService.getSessionUser().getProjects();
+    public ResponseEntity<Page<ProjectResponseDTO>>  getAllProjectsByUser(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+        User user = userService.getSessionUser();
 
-        List<ProjectResponseDTO> responseProjects = projects.stream()
-                .map(ProjectMapper::toProjectResponseDTO).sorted((a, b) -> b.createdAt().compareTo(a.createdAt())).collect(Collectors.toList());
+        Page<ProjectResponseDTO> responseProjects = projectService
+                .getAllProjectsByUser(user, page, size, sortBy, direction)
+             ;
 
         return ResponseEntity.ok(responseProjects);
     }
@@ -73,13 +79,14 @@ public class ProjectController {
             @ApiResponse(responseCode = "200", description = "get successfully"),
             @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
-    public ResponseEntity<List<ProjectResponseDTO>> getAllProjectsByUserParticipation() {
-        Set<Project> projects = userService.getSessionUser().getParticipatedProjects();
+    public ResponseEntity<Page<ProjectResponseDTO>> getAllProjectsByUserParticipation(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+        User user = userService.getSessionUser();
 
-        List<ProjectResponseDTO> responseProjects = projects.stream()
-                .map(ProjectMapper::toProjectResponseDTO)
-                .sorted((a, b) -> b.createdAt().compareTo(a.createdAt())).collect(Collectors.toList());;
-
+        Page<ProjectResponseDTO> responseProjects = projectService.getAllProjectsByUserParticipation(user, page, size, sortBy, direction);
         return ResponseEntity.ok(responseProjects);
     }
 
