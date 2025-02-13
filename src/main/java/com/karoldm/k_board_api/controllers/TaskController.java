@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -73,22 +74,17 @@ public class TaskController {
             @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "403", description = "user is not owner neither member of the project", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
-    public ResponseEntity<List<TaskResponseDTO>> getAllTasksByProject(@PathVariable UUID projectId, @RequestParam Optional<UUID> memberId) {
+    public ResponseEntity<Page<TaskResponseDTO>> getAllTasksByProject(
+            @PathVariable UUID projectId, @RequestParam Optional<UUID> memberId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+
         checkProjectOwnershipOrParticipation(projectId);
         Project project = getProjectOrThrow(projectId);
 
-        List<TaskResponseDTO> responseTasks = project.getTasks().stream()
-                .map(TaskMapper::toTaskResponseDTO)
-                .sorted((a, b) -> b.createdAt().compareTo(a.createdAt())).collect(Collectors.toList());
-
-        if(memberId.isPresent()){
-            responseTasks = responseTasks.stream()
-                    .filter(task -> task.members()
-                            .stream()
-                            .anyMatch(responsible -> responsible.id() == memberId.get()))
-                    .sorted((a, b) -> b.createdAt().compareTo(a.createdAt())).collect(Collectors.toList());
-        }
-
+        Page<TaskResponseDTO> responseTasks = taskService.getTasksByProject(project, memberId, page, size, sortBy, direction);
         return ResponseEntity.ok(responseTasks);
     }
 
