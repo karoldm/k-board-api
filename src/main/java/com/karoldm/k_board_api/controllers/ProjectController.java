@@ -104,7 +104,7 @@ public class ProjectController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/member")
+    @PostMapping("/member")
     @Operation(
             summary = "Add user to a project as member")
     @ApiResponses(value = {
