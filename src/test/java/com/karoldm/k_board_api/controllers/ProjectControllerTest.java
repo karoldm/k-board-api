@@ -10,6 +10,7 @@ import com.karoldm.k_board_api.dto.response.ProjectResponseDTO;
 import com.karoldm.k_board_api.entities.Project;
 import com.karoldm.k_board_api.entities.User;
 import com.karoldm.k_board_api.handlers.GlobalExceptionHandler;
+import com.karoldm.k_board_api.mappers.ProjectMapper;
 import com.karoldm.k_board_api.services.ProjectService;
 import com.karoldm.k_board_api.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +19,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -69,17 +74,32 @@ class ProjectControllerTest {
     @Test
     void shouldListProjectsThatUserIsOwner() throws Exception {
         UUID projectOwnerId = UUID.randomUUID();
-        UUID projectMemberId = UUID.randomUUID();
 
         Project projectOwnerMock = createProjectMock(userMock, projectOwnerId);
-        Project projectMemberMock = createProjectMock(userMock, projectMemberId);
+        List<Project> projects = List.of(projectOwnerMock);
 
-        userMock.setProjects(new HashSet<>(List.of(projectOwnerMock)));
-        userMock.setParticipatedProjects(new HashSet<>(List.of(projectMemberMock)));
+        List<ProjectResponseDTO> projectDTOs = projects.stream()
+                .map(ProjectMapper::toProjectResponseDTO)
+                .toList();
+
+        Page<ProjectResponseDTO> projectPage = new PageImpl<>(projectDTOs, PageRequest.of(0, 10), projects.size());
+
+        when(projectService.getAllProjectsByUser(any(User.class), anyString(), anyInt(), anyInt(), anyString(), anyString()))
+                .thenReturn(projectPage);
 
         MvcResult result = mockMvc.perform(get(OWNER_ENDPOINT)
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("filter", "")
+                        .param("sortBy", "createdAt")
+                        .param("direction", "desc")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
+                .andExpect(status().isOk())
+                .andReturn();
+
+        verify(projectService)
+                .getAllProjectsByUser(any(User.class), anyString(), anyInt(), anyInt(), anyString(), anyString());
+
 
         assertProjectResponse(result, projectOwnerId);
     }
@@ -87,19 +107,35 @@ class ProjectControllerTest {
     @Test
     void shouldListProjectsThatUserIsMember() throws Exception {
         UUID projectOwnerId = UUID.randomUUID();
-        UUID projectMemberId = UUID.randomUUID();
 
         Project projectOwnerMock = createProjectMock(userMock, projectOwnerId);
-        Project projectMemberMock = createProjectMock(userMock, projectMemberId);
+        List<Project> projects = List.of(projectOwnerMock);
 
-        userMock.setProjects(new HashSet<>(List.of(projectOwnerMock)));
-        userMock.setParticipatedProjects(new HashSet<>(List.of(projectMemberMock)));
+        List<ProjectResponseDTO> projectDTOs = projects.stream()
+                .map(ProjectMapper::toProjectResponseDTO)
+                .toList();
+
+        Page<ProjectResponseDTO> projectPage = new PageImpl<>(projectDTOs, PageRequest.of(0, 10), projects.size());
+
+        when(projectService.getAllProjectsByUserParticipation(
+                any(User.class), anyString(), anyInt(), anyInt(), anyString(), anyString()))
+                .thenReturn(projectPage);
 
         MvcResult result = mockMvc.perform(get(MEMBER_ENDPOINT)
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("filter", "")
+                        .param("sortBy", "createdAt")
+                        .param("direction", "desc")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
+                .andExpect(status().isOk())
+                .andReturn();
 
-        assertProjectResponse(result, projectMemberId);
+        verify(projectService)
+                .getAllProjectsByUserParticipation(
+                        any(User.class), anyString(), anyInt(), anyInt(), anyString(), anyString());
+
+        assertProjectResponse(result, projectOwnerId);
     }
 
     @Test
@@ -170,9 +206,14 @@ class ProjectControllerTest {
     }
 
     private void assertProjectResponse(MvcResult result, UUID expectedProjectId) throws Exception {
+
         assertEquals(MediaType.APPLICATION_JSON_VALUE, result.getResponse().getContentType());
-        List<ProjectResponseDTO> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
-        assertEquals(1, response.size());
-        assertEquals(expectedProjectId, response.getFirst().id());
+
+        Map<String, Object> responseMap = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
+
+        List<ProjectResponseDTO> content = objectMapper.convertValue(responseMap.get("content"), new TypeReference<>() {});
+
+        assertEquals(1, content.size());
+        assertEquals(expectedProjectId, content.getFirst().id());
     }
 }

@@ -8,10 +8,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface TaskRepository extends JpaRepository<Task, UUID> {
-    Page<Task> findByProject(Project project, Pageable pageable);
+    List<Task> findByProject(Project project);
 
     @Query("""
         SELECT t FROM tasks t
@@ -19,9 +20,9 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
         WHERE t.project = :project
         AND r.id = :responsibleId
     """)
-    Page<Task> findByProjectAndResponsibleContaining(
+    List<Task> findByProjectAndResponsibleContaining(
             @Param("project") Project project,
-            @Param("responsibleId") UUID responsibleId,
-            Pageable pageable
+            @Param("responsibleId") UUID responsibleI
+
     );
 }

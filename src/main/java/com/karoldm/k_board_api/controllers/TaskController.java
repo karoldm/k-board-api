@@ -74,17 +74,14 @@ public class TaskController {
             @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "403", description = "user is not owner neither member of the project", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
-    public ResponseEntity<Page<TaskResponseDTO>> getAllTasksByProject(
-            @PathVariable UUID projectId, @RequestParam Optional<UUID> memberId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String direction) {
+    public ResponseEntity<List<TaskResponseDTO>> getAllTasksByProject(
+            @PathVariable UUID projectId, @RequestParam Optional<UUID> memberId
+          ) {
 
         checkProjectOwnershipOrParticipation(projectId);
         Project project = getProjectOrThrow(projectId);
 
-        Page<TaskResponseDTO> responseTasks = taskService.getTasksByProject(project, memberId, page, size, sortBy, direction);
+        List<TaskResponseDTO> responseTasks = taskService.getTasksByProject(project, memberId);
         return ResponseEntity.ok(responseTasks);
     }
 
