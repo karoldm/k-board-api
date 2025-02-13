@@ -2,13 +2,19 @@ package com.karoldm.k_board_api.services;
 
 import com.karoldm.k_board_api.dto.payload.EditTaskPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.TaskPayloadDTO;
+import com.karoldm.k_board_api.dto.response.TaskResponseDTO;
 import com.karoldm.k_board_api.entities.Project;
 import com.karoldm.k_board_api.entities.Task;
 import com.karoldm.k_board_api.entities.User;
 import com.karoldm.k_board_api.enums.TaskStatus;
+import com.karoldm.k_board_api.mappers.TaskMapper;
 import com.karoldm.k_board_api.repositories.TaskRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -65,5 +71,25 @@ public class TaskService {
         task.setTags(data.tags());
 
         return taskRepository.save(task);
+    }
+
+
+    public Page<TaskResponseDTO> getTasksByProject(Project project, Optional<UUID> memberId, int page, int size, String sortBy, String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Task> taskPage;
+
+        if (memberId.isPresent()) {
+            taskPage = taskRepository.findByProjectAndResponsibleContaining(project, memberId.get(), pageable);
+        } else {
+            taskPage = taskRepository.findByProject(project, pageable);
+        }
+
+        return taskPage.map(TaskMapper::toTaskResponseDTO);
     }
 }
