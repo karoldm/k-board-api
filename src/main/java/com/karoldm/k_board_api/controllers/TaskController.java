@@ -86,41 +86,6 @@ public class TaskController {
         return ResponseEntity.ok(responseTasks);
     }
 
-    @PutMapping("/{taskId}/member")
-    @Operation(
-            summary = "add a member to a task")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "added successfully"),
-            @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "403", description = "user is not owner neither member of the project", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "404", description = "task not found", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
-    })
-    public ResponseEntity<TaskResponseDTO> addMember(@PathVariable UUID taskId, @RequestBody @Valid AddResponsiblePayloadDTO data) {
-
-        Optional<Task> task = taskService.findTaskById(taskId);
-
-        if(task.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found with ID: " + taskId);
-        }
-
-        checkProjectOwnershipOrParticipation(task.get().getProject().getId());
-
-        Set<UUID> membersId = data.membersId();
-        Project project = task.get().getProject();
-
-        Set<User> projectMembers = new HashSet<>(project.getMembers());
-
-        Set<UUID> missingUserIds = membersId.stream()
-                .filter(memberId -> projectMembers.stream().noneMatch(user -> user.getId().equals(memberId)))
-                .collect(Collectors.toSet());
-
-        if (!missingUserIds.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Users not found with IDs: " + missingUserIds);
-        }
-
-        Task updatedTask = taskService.addMembersToTask(task.get(), projectMembers);
-        return ResponseEntity.ok(TaskMapper.toTaskResponseDTO(updatedTask));
-    }
 
     @PutMapping("/{taskId}")
     @Operation(
@@ -131,7 +96,10 @@ public class TaskController {
             @ApiResponse(responseCode = "403", description = "user is not owner neither member of the project", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "404", description = "task not found", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
-    public ResponseEntity<TaskResponseDTO> editTask(@PathVariable UUID taskId, @RequestBody @Valid EditTaskPayloadDTO data) {
+    public ResponseEntity<TaskResponseDTO> editTask(
+            @PathVariable UUID taskId,
+            @RequestBody @Valid EditTaskPayloadDTO data
+    ) {
 
         Optional<Task> task = taskService.findTaskById(taskId);
 
@@ -141,9 +109,30 @@ public class TaskController {
 
         checkProjectOwnershipOrParticipation(task.get().getProject().getId());
 
-        Task updatedTask = taskService.editTask(task.get(), data);
+        if(data.responsible().isPresent()){
+            Project project = task.get().getProject();
+            Set<User> projectMembers = new HashSet<>(project.getMembers());
+            projectMembers.add(project.getOwner());
 
+            // handle user id doest not belong to project
+            Set<UUID> missingUserIds = data.responsible().get().stream()
+                    .filter(memberId -> projectMembers.stream().noneMatch(user -> user.getId().equals(memberId)))
+                    .collect(Collectors.toSet());
+
+            if (!missingUserIds.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Users not found with ID's: " + missingUserIds);
+            }
+
+            // get users by id
+            Set<User> responsible = new HashSet<>(userService.findAllUsersById(data.responsible().get()));
+
+            Task updatedTask = taskService.editTask(task.get(), data, responsible);
+            return ResponseEntity.ok(TaskMapper.toTaskResponseDTO(updatedTask));
+        }
+
+        Task updatedTask = taskService.editTask(task.get(), data);
         return ResponseEntity.ok(TaskMapper.toTaskResponseDTO(updatedTask));
+
     }
 
     @DeleteMapping("/{taskId}")
