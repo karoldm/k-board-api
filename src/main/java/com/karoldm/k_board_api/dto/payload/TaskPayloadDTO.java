@@ -19,8 +19,10 @@ public record TaskPayloadDTO(
     @NotEmpty(message = "color cannot be empty")
     String color,
 
+    @NotNull(message = "tags cannot be null")
     Set<String> tags,
 
+    @NotNull(message = "membersId cannot be null")
     Set<UUID> membersId
 ) {
 }
