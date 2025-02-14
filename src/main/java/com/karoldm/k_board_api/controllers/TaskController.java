@@ -4,6 +4,7 @@ import com.karoldm.k_board_api.dto.payload.AddResponsiblePayloadDTO;
 import com.karoldm.k_board_api.dto.payload.EditTaskPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.TaskPayloadDTO;
 import com.karoldm.k_board_api.dto.response.ErrorResponseDTO;
+import com.karoldm.k_board_api.dto.response.TaskListResponseDTO;
 import com.karoldm.k_board_api.dto.response.TaskResponseDTO;
 import com.karoldm.k_board_api.entities.Project;
 import com.karoldm.k_board_api.entities.Task;
@@ -74,14 +75,14 @@ public class TaskController {
             @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "403", description = "user is not owner neither member of the project", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
-    public ResponseEntity<List<TaskResponseDTO>> getAllTasksByProject(
+    public ResponseEntity<TaskListResponseDTO> getAllTasksByProject(
             @PathVariable UUID projectId, @RequestParam Optional<UUID> memberId
           ) {
 
         checkProjectOwnershipOrParticipation(projectId);
         Project project = getProjectOrThrow(projectId);
 
-        List<TaskResponseDTO> responseTasks = taskService.getTasksByProject(project, memberId);
+        TaskListResponseDTO responseTasks = taskService.getTasksByProject(project, memberId);
         return ResponseEntity.ok(responseTasks);
     }
 
