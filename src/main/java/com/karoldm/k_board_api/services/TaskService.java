@@ -51,24 +51,39 @@ public class TaskService {
     }
 
     @Transactional
-    public Task addMembersToTask(Task task, Set<User> members){
-        task.setResponsible(members);
-        return taskRepository.save(task);
-    }
-
-    @Transactional
     public void deleteTask(UUID id) {
         taskRepository.deleteById(id);
     }
 
     @Transactional
-    public Task editTask(Task task, EditTaskPayloadDTO data){
-        task.setStatus(data.status().toString());
-        task.setDescription(data.description());
-        task.setTitle(data.title());
-        task.setColor(data.color());
-        task.setTags(data.tags());
+    protected void updateTaskData(Task task, EditTaskPayloadDTO data) {
+        if(data.status().isPresent()){
+            task.setStatus(data.status().get().toString());
+        }
+        if(data.description().isPresent()){
+            task.setDescription(data.description().get());
+        }
+        if(data.title().isPresent()){
+            task.setTitle(data.title().get());
+        }
+        if(data.color().isPresent()){
+            task.setColor(data.color().get());
+        }
+        if(data.tags().isPresent()){
+            task.setTags(data.tags().get());
+        }
+    }
 
+    @Transactional
+    public Task editTask(Task task, EditTaskPayloadDTO data, Set<User> responsible){
+        this.updateTaskData(task, data);
+        task.setResponsible(responsible);
+        return taskRepository.save(task);
+    }
+
+    @Transactional
+    public Task editTask(Task task, EditTaskPayloadDTO data){
+        updateTaskData(task, data);
         return taskRepository.save(task);
     }
 
