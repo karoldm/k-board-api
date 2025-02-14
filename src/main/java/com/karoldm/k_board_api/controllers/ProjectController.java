@@ -143,7 +143,7 @@ public class ProjectController {
             @ApiResponse(responseCode = "403", description = "user is not project's owner", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "invalid body data", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
-    public ResponseEntity<ProjectResponseDTO> deleteMembers(@RequestBody @Valid RemoveMembersPayloadDTO removeMembersPayloadDTO, @PathVariable UUID id) {
+        public ResponseEntity<ProjectResponseDTO> deleteMembers(@RequestBody @Valid RemoveMembersPayloadDTO removeMembersPayloadDTO, @PathVariable UUID id) {
         Project project = getProjectOrThrow(id);
         checkProjectOwnership(id);
 
@@ -175,6 +175,15 @@ public class ProjectController {
         checkProjectOwnership(id);
         Project updatedProject = projectService.updateProject(data.title(), id);
         return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(updatedProject));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProjectResponseDTO> getProjectById(@PathVariable UUID id) {
+        checkProjectOwnership(id);
+
+        Project project = getProjectOrThrow(id);
+
+        return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(project));
     }
 
     private void checkProjectOwnership(UUID projectId) {

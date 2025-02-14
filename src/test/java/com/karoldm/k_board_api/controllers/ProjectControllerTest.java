@@ -68,7 +68,7 @@ class ProjectControllerTest {
                 .build();
 
         userMock = createUserMock();
-        when(userService.getSessionUser()).thenReturn(userMock);
+        lenient().when(userService.getSessionUser()).thenReturn(userMock);
     }
 
     @Test
@@ -179,6 +179,45 @@ class ProjectControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.message").value("User is project's owner."));
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenGetProjectByNonExistingID() throws Exception {
+        String id = "123";
+
+        mockMvc.perform(get(PROJECT_ENDPOINT + "/" + id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value("Resource not found. Invalid UUID: " + id));
+    }
+
+    @Test
+    void shouldReturnForbiddenWhenGetProjectByNonOwnerOrMemberID() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        mockMvc.perform(get(PROJECT_ENDPOINT + "/" + id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.message").value("You do not have permission to access this project"));
+
+    }
+
+    @Test
+    void shouldReturnSuccessWhenGetProjectByID() throws Exception {
+        UUID id = UUID.randomUUID();
+        Project project = createProjectMock(userMock, id);
+        userMock.setProjects(new HashSet<>(List.of(project)));
+
+        when(projectService.findProjectById(id)).thenReturn(Optional.of(project));
+
+        mockMvc.perform(get(PROJECT_ENDPOINT + "/" + id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id.toString()));
+
+        verify(projectService).findProjectById(id);
     }
 
     private User createUserMock() {
