@@ -179,11 +179,19 @@ public class ProjectController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ProjectResponseDTO> getProjectById(@PathVariable UUID id) {
-        checkProjectOwnership(id);
+        checkProjectOwnershipOrParticipation(id);
 
         Project project = getProjectOrThrow(id);
 
         return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(project));
+    }
+
+    private void checkProjectOwnershipOrParticipation(UUID projectId) {
+        boolean isNotOwner = userService.getSessionUser().getProjects().stream().noneMatch(project -> project.getId().equals(projectId));
+        boolean isNotMember = userService.getSessionUser().getParticipatedProjects().stream().noneMatch(project -> project.getId().equals(projectId));
+        if (isNotMember && isNotOwner) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this project");
+        }
     }
 
     private void checkProjectOwnership(UUID projectId) {
