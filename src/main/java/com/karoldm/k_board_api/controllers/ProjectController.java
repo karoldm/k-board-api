@@ -2,7 +2,7 @@ package com.karoldm.k_board_api.controllers;
 
 import com.karoldm.k_board_api.dto.payload.AddMemberPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.ProjectPayloadDTO;
-import com.karoldm.k_board_api.dto.payload.RemoveMembersPayloadDTO;
+import com.karoldm.k_board_api.dto.payload.EditProjectPayloadDTO;
 import com.karoldm.k_board_api.dto.response.ErrorResponseDTO;
 import com.karoldm.k_board_api.dto.response.ProjectResponseDTO;
 import com.karoldm.k_board_api.entities.Project;
@@ -134,34 +134,6 @@ public class ProjectController {
         return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(updatedProject));
     }
 
-    @DeleteMapping("/{id}/members")
-    @Operation(
-            summary = "remove members from a project")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "removed successfully"),
-            @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "403", description = "user is not project's owner", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "invalid body data", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
-    })
-        public ResponseEntity<ProjectResponseDTO> deleteMembers(@RequestBody @Valid RemoveMembersPayloadDTO removeMembersPayloadDTO, @PathVariable UUID id) {
-        Project project = getProjectOrThrow(id);
-        checkProjectOwnership(id);
-
-        Set<UUID> membersId = removeMembersPayloadDTO.membersId();
-        List<User> users = userService.findAllUsersById(membersId);
-
-        Set<UUID> missingUserIds = membersId.stream()
-                .filter(memberId -> users.stream().noneMatch(user -> user.getId().equals(memberId)))
-                .collect(Collectors.toSet());
-
-        if (!missingUserIds.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Users not found with IDs: " + missingUserIds);
-        }
-
-        Project updatedProject = projectService.deleteMembersToProject(project, users);
-        return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(updatedProject));
-    }
-
     @PutMapping("/{id}")
     @Operation(
             summary = "edit project's data")
@@ -171,9 +143,9 @@ public class ProjectController {
             @ApiResponse(responseCode = "403", description = "user is not project's owner", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "invalid body data", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
-    public ResponseEntity<ProjectResponseDTO> updateProject(@RequestBody @Valid ProjectPayloadDTO data, @PathVariable UUID id) {
+    public ResponseEntity<ProjectResponseDTO> updateProject(@RequestBody @Valid EditProjectPayloadDTO data, @PathVariable UUID id) {
         checkProjectOwnership(id);
-        Project updatedProject = projectService.updateProject(data.title(), id);
+        Project updatedProject = projectService.updateProject(data.title(), data.membersIdToRemove(), id);
         return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(updatedProject));
     }
 

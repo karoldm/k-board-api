@@ -91,7 +91,7 @@ class ProjectServiceTest {
         when(projectRepository.findById(any(UUID.class))).thenReturn(Optional.of(project));
         when(projectRepository.save(any(Project.class))).thenReturn(project);
 
-        Project updatedProject = projectService.updateProject(newTitle, project.getId());
+        Project updatedProject = projectService.updateProject(newTitle, new HashSet<>(), project.getId());
 
         assertNotNull(updatedProject);
         assertEquals(newTitle, updatedProject.getTitle());
@@ -105,7 +105,7 @@ class ProjectServiceTest {
         when(projectRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
-            projectService.updateProject(newTitle, project.getId());
+            projectService.updateProject(newTitle, new HashSet(), project.getId());
         });
         assertEquals("Project not found with id: " + project.getId(), exception.getReason());
     }

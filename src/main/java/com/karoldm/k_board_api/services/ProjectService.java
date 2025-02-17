@@ -20,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -64,10 +65,24 @@ public class ProjectService {
     }
 
     @Transactional
-    public Project updateProject(String title, UUID id) {
+    public Project updateProject(String title, Set<UUID> membersToRemove, UUID id) {
         Project project = projectRepository.findById(id).orElse(null);
         if(project == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found with id: " + id);
+        }
+
+        if(!membersToRemove.isEmpty()){
+            List<User> users = userRepository.findAllById(membersToRemove);
+
+            Set<UUID> missingUserIds = membersToRemove.stream()
+                    .filter(memberId -> users.stream().noneMatch(user -> user.getId().equals(memberId)))
+                    .collect(Collectors.toSet());
+
+            if (!missingUserIds.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Users not found with IDs: " + missingUserIds);
+            }
+
+            this.deleteMembersToProject(project, users);
         }
 
         project.setTitle(title);
