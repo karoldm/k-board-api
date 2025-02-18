@@ -22,6 +22,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/auth")
@@ -66,10 +67,10 @@ public class AuthController {
             @ApiResponse(responseCode = "201", description = "created successfully"),
             @ApiResponse(responseCode = "400", description = "invalid body data", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
-    public ResponseEntity<?> registerUser(@ModelAttribute @Valid RegisterPayloadDTO data) {
+    public ResponseEntity<UserResponseDTO> registerUser(@ModelAttribute @Valid RegisterPayloadDTO data) {
 
         if(userService.findUserByEmail(data.email()) != null){
-            return ResponseEntity.badRequest().body(new ErrorResponseDTO(HttpStatus.BAD_REQUEST.value(), "Email already registered."));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already registered.");
         }
 
         User user = userService.createUser(data);

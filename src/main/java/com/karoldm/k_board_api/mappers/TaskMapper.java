@@ -8,6 +8,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class TaskMapper {
+    private TaskMapper(){}
+
     public static TaskResponseDTO toTaskResponseDTO(Task task) {
         Set<UserResponseDTO> responsible = task.getResponsible().stream()
                 .map(UserMapper::toUserResponseDTO)

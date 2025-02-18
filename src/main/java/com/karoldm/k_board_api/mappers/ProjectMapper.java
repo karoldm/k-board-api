@@ -9,20 +9,21 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ProjectMapper {
+    private ProjectMapper(){}
 
-        public static ProjectResponseDTO toProjectResponseDTO(Project project) {
+    public static ProjectResponseDTO toProjectResponseDTO(Project project) {
 
-            Set<UserResponseDTO> userDTOs = project.getMembers().stream()
-                    .map(UserMapper::toUserResponseDTO)
-                    .collect(Collectors.toSet());
+        Set<UserResponseDTO> userDTOs = project.getMembers().stream()
+                .map(UserMapper::toUserResponseDTO)
+                .collect(Collectors.toSet());
 
-            return new ProjectResponseDTO(
-                    project.getId(),
-                    project.getTitle(),
-                    project.getCreatedAt(),
-                    UserMapper.toUserResponseDTO(project.getOwner()),
-                    userDTOs,
-                    ProjectProgress.calculeProgress(project.getTasks())
-            );
-        }
+        return new ProjectResponseDTO(
+                project.getId(),
+                project.getTitle(),
+                project.getCreatedAt(),
+                UserMapper.toUserResponseDTO(project.getOwner()),
+                userDTOs,
+                ProjectProgress.calculeProgress(project.getTasks())
+        );
+    }
 }

@@ -1,6 +1,5 @@
 package com.karoldm.k_board_api.controllers;
 
-import com.karoldm.k_board_api.dto.payload.AddResponsiblePayloadDTO;
 import com.karoldm.k_board_api.dto.payload.EditTaskPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.TaskPayloadDTO;
 import com.karoldm.k_board_api.dto.response.ErrorResponseDTO;
@@ -20,7 +19,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

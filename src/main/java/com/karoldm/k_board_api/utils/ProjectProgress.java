@@ -7,6 +7,8 @@ import java.util.Objects;
 import java.util.Set;
 
 public class ProjectProgress {
+    private ProjectProgress(){}
+
     public static double calculeProgress(Set<Task> tasks) {
         if(tasks.isEmpty()) return 0.0;
 

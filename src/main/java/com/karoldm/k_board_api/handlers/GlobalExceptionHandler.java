@@ -79,7 +79,7 @@ public class GlobalExceptionHandler {
                         .replace("400 BAD_REQUEST ", "")
                         .replace("404 NOT_FOUND ", "")
                         .replace("403 FORBIDDEN ", "")
-                        .replaceAll("\"", "")
+                        .replace("\"", "")
         );
 
         return new ResponseEntity<>(errorResponse, ex.getStatusCode());

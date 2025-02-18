@@ -253,6 +253,7 @@ class ProjectControllerTest {
         List<ProjectResponseDTO> content = objectMapper.convertValue(responseMap.get("content"), new TypeReference<>() {});
 
         assertEquals(1, content.size());
-        assertEquals(expectedProjectId, content.getFirst().id());
+        assertEquals(expectedProjectId,
+                content.get(0).id());
     }
 }

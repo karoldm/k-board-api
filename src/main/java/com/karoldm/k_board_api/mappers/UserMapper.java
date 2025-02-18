@@ -4,6 +4,8 @@ import com.karoldm.k_board_api.dto.response.UserResponseDTO;
 import com.karoldm.k_board_api.entities.User;
 
 public class UserMapper {
+    private UserMapper(){}
+
     public static UserResponseDTO toUserResponseDTO(User user) {
         return new UserResponseDTO(
                 user.getId(),

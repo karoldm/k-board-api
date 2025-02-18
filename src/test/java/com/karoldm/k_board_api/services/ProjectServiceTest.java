@@ -104,9 +104,14 @@ class ProjectServiceTest {
         String newTitle = "Updated Project Title";
         when(projectRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
-            projectService.updateProject(newTitle, new HashSet(), project.getId());
-        });
-        assertEquals("Project not found with id: " + project.getId(), exception.getReason());
+        UUID projectId = project.getId();
+        Set<UUID> membersToRemove = new HashSet<>();
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> projectService.updateProject(newTitle, membersToRemove, projectId)
+        );
+
+        assertEquals("Project not found with id: " + projectId, exception.getReason());
     }
 }
