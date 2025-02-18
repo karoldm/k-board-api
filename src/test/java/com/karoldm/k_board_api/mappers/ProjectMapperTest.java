@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ProjectMapperTest {
+class ProjectMapperTest {
     @Test
     void shouldMapProjectToProjectResponseDTO() {
         UUID userId = UUID.randomUUID();

@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
-public class AuthControllerTest {
+class AuthControllerTest {
 
     @InjectMocks
     private AuthController authController;
@@ -131,7 +131,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestIfEmailExist() throws Exception {
+    void shouldReturnBadRequestIfEmailExist() throws Exception {
         String email = "user@example.com";
         String password = "1234";
         String name = "john";
@@ -151,7 +151,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void shuldRegisterUserSuccessfully() throws Exception {
+    void shuldRegisterUserSuccessfully() throws Exception {
         String email = "user@example.com";
         String password = "1234";
         String name = "john";

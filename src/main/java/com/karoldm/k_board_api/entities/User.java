@@ -11,6 +11,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serial;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -43,15 +44,15 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
     @JsonManagedReference
-    private Set<Project> projects = new HashSet<>();
+    private transient Set<Project> projects = new HashSet<>();
 
     @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY)
     @JsonBackReference
-    private Set<Project> participatedProjects = new HashSet<>();
+    private transient Set<Project> participatedProjects = new HashSet<>();
 
     @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY)
     @JsonManagedReference
-    private List<Task> tasks;
+    private transient List<Task> tasks;
 
     public void addProjectParticipated(Project project) {
         participatedProjects.add(project);

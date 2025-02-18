@@ -1,8 +1,6 @@
 package com.karoldm.k_board_api.dto.payload;
 
 import com.karoldm.k_board_api.enums.TaskStatus;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 
 import java.util.Optional;
 import java.util.Set;

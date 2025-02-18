@@ -8,7 +8,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class UserMapperTest {
+class UserMapperTest {
 
     @Test
     void shouldMapUserToUserResponseDTO() {
