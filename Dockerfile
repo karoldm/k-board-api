@@ -1,10 +1,17 @@
-FROM eclipse-temurin:17-jdk-alpine
+FROM maven:3.8.6-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
-COPY target/*.jar app.jar
+COPY pom.xml .
+COPY src ./src
 
-COPY src/main/resources/application.properties /app/config/application.properties
+RUN mvn clean package -DskipTests
+
+FROM eclipse-temurin:17-jre-alpine
+
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
 
