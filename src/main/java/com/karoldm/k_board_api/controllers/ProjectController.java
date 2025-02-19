@@ -158,6 +158,7 @@ public class ProjectController {
     private void checkProjectOwnershipOrParticipation(UUID projectId) {
         boolean isNotOwner = userService.getSessionUser().getProjects().stream().noneMatch(project -> project.getId().equals(projectId));
         boolean isNotMember = userService.getSessionUser().getParticipatedProjects().stream().noneMatch(project -> project.getId().equals(projectId));
+
         if (isNotMember && isNotOwner) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this project");
         }

@@ -44,15 +44,15 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
     @JsonManagedReference
-    private transient Set<Project> projects = new HashSet<>();
+    private Set<Project> projects = new HashSet<>();
 
     @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY)
     @JsonBackReference
-    private transient Set<Project> participatedProjects = new HashSet<>();
+    private Set<Project> participatedProjects = new HashSet<>();
 
     @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY)
     @JsonManagedReference
-    private transient List<Task> tasks;
+    private List<Task> tasks;
 
     public void addProjectParticipated(Project project) {
         participatedProjects.add(project);
