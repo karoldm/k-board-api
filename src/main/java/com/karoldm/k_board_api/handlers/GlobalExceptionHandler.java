@@ -18,13 +18,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Arrays;
-
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDTO> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    private ResponseEntity<ErrorResponseDTO> handleValidationExceptions(MethodArgumentNotValidException ex) {
 
         StringBuilder errorsField = new StringBuilder();
 
@@ -41,7 +39,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UserNotAuthenticated.class)
-    public ResponseEntity<ErrorResponseDTO> handleUserNotAuthenticated(UserNotAuthenticated ex) {
+    private ResponseEntity<ErrorResponseDTO> handleUserNotAuthenticated(UserNotAuthenticated ex) {
         ErrorResponseDTO errorObject = new ErrorResponseDTO(
                 HttpStatus.UNAUTHORIZED.value(),
                 ex.getMessage()
@@ -56,7 +54,7 @@ public class GlobalExceptionHandler {
             AuthenticationException.class,
             InternalAuthenticationServiceException.class
     })
-    public ResponseEntity<ErrorResponseDTO> handleAuthenticationException(Exception ex) {
+    private ResponseEntity<ErrorResponseDTO> handleAuthenticationException(Exception ex) {
         ErrorResponseDTO errorObject = new ErrorResponseDTO(
                 HttpStatus.UNAUTHORIZED.value(),
                 "Invalid email or password."
@@ -66,7 +64,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponseDTO> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
+    private ResponseEntity<ErrorResponseDTO> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
         if (ex.getRequiredType() == java.util.UUID.class) {
             ErrorResponseDTO errorResponse = new ErrorResponseDTO(
                     HttpStatus.NOT_FOUND.value(),
@@ -83,7 +81,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({JWTVerificationException.class, JWTDecodeException.class})
-    public ResponseEntity<ErrorResponseDTO> handleTokenIsMissingException(JWTDecodeException ex) {
+    private ResponseEntity<ErrorResponseDTO> handleTokenIsMissingException(JWTDecodeException ex) {
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
                 HttpStatus.UNAUTHORIZED.value(),
                 "Invalid token: " + ex.getMessage()
@@ -92,7 +90,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ErrorResponseDTO> handleResponseStatusException(ResponseStatusException ex) {
+    private ResponseEntity<ErrorResponseDTO> handleResponseStatusException(ResponseStatusException ex) {
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
                 ex.getStatusCode().value(),
                 ex.getMessage()
@@ -106,7 +104,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponseDTO> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex){
+    private ResponseEntity<ErrorResponseDTO> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex){
 
         ErrorResponseDTO errorObject = new ErrorResponseDTO(
                 HttpStatus.BAD_REQUEST.value(),
@@ -117,7 +115,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> handleUserNotFoundException(UserNotFoundException ex){
+    private ResponseEntity<ErrorResponseDTO> handleUserNotFoundException(UserNotFoundException ex){
         ErrorResponseDTO errorObject = new ErrorResponseDTO(
                 HttpStatus.NOT_FOUND.value(),
                 ex.getMessage()
@@ -126,7 +124,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AmazonS3Exception.class)
-    public ResponseEntity<ErrorResponseDTO> amazonS3Exception(AmazonS3Exception ex) {
+    private ResponseEntity<ErrorResponseDTO> amazonS3Exception(AmazonS3Exception ex) {
         ErrorResponseDTO errorObject = new ErrorResponseDTO(
                 HttpStatus.BAD_GATEWAY.value(),
                 ex.getMessage()
@@ -135,7 +133,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidPasswordException.class)
-    public ResponseEntity<ErrorResponseDTO> invalidPasswordException(InvalidPasswordException ex) {
+    private ResponseEntity<ErrorResponseDTO> invalidPasswordException(InvalidPasswordException ex) {
         ErrorResponseDTO errorObject = new ErrorResponseDTO(
                 HttpStatus.BAD_REQUEST.value(),
                 ex.getMessage()
