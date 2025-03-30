@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
 
 @RestController()
 @RequestMapping("/task")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class TaskController {
     private final TaskService taskService;
     private final UserService userService;

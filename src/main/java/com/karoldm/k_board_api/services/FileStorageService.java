@@ -2,8 +2,10 @@ package com.karoldm.k_board_api.services;
 
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.karoldm.k_board_api.exceptions.AmazonS3Exception;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,7 +25,23 @@ public class FileStorageService {
         this.amazonS3Client = amazonS3Client;
     }
 
-    public String upload(MultipartFile fileUpload) {
+    public void removeFileByUrl(String fileUrl) {
+        try {
+            String[] splittedUrl = fileUrl.split("/");
+            String fileKey = splittedUrl[splittedUrl.length-1];
+
+            DeleteObjectRequest deleteRequest = new DeleteObjectRequest(
+                    "k-board-images",
+                    fileKey
+            );
+
+            amazonS3Client.deleteObject(deleteRequest);
+        } catch(Exception ex){
+            throw new AmazonS3Exception(String.format("Error deleting file: %s", ex.getMessage()));
+        }
+    }
+
+    public String uploadFile(MultipartFile fileUpload) {
         if(fileUpload == null || fileUpload.isEmpty()) {
             return "";
         }
@@ -33,7 +51,7 @@ public class FileStorageService {
 
             String fileName = fileUpload.getOriginalFilename();
             if (fileName != null) {
-            String[] splitFileName = fileName.split("\\.");
+            String[] splitFileName = fileName.trim().split("\\.");
             if(splitFileName.length == 0) {
                 throw new RuntimeException("Invalid file name or extension");
             }
@@ -56,7 +74,7 @@ public class FileStorageService {
             }
             return null;
         } catch (IOException ex) {
-            throw new RuntimeException("Error uploading file", ex);
+            throw new AmazonS3Exception(String.format("Error uploading file: %s", ex.getMessage()));
         }
     }
 }

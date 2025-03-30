@@ -2,6 +2,7 @@ package com.karoldm.k_board_api.handlers;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.karoldm.k_board_api.dto.response.ErrorResponseDTO;
+import com.karoldm.k_board_api.exceptions.AmazonS3Exception;
 import com.karoldm.k_board_api.exceptions.UserNotAuthenticated;
 import com.karoldm.k_board_api.exceptions.UserNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -116,6 +117,15 @@ public class GlobalExceptionHandler {
                 ex.getMessage()
         );
         return new ResponseEntity<>(errorObject, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(AmazonS3Exception.class)
+    public ResponseEntity<ErrorResponseDTO> amazonS3Exception(AmazonS3Exception ex) {
+        ErrorResponseDTO errorObject = new ErrorResponseDTO(
+                HttpStatus.BAD_GATEWAY.value(),
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(errorObject, HttpStatus.BAD_GATEWAY);
     }
 
     @ExceptionHandler(Exception.class)

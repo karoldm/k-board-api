@@ -5,9 +5,7 @@ import com.karoldm.k_board_api.dto.response.ErrorResponseDTO;
 import com.karoldm.k_board_api.dto.response.LoginResponseDTO;
 import com.karoldm.k_board_api.dto.payload.RegisterPayloadDTO;
 import com.karoldm.k_board_api.dto.response.UserResponseDTO;
-import com.karoldm.k_board_api.entities.User;
-import com.karoldm.k_board_api.services.TokenService;
-import com.karoldm.k_board_api.services.UserService;
+import com.karoldm.k_board_api.services.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,20 +13,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/auth")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthController {
-    private UserService userService;
+    private final AuthService authService;
 
     @PostMapping("/login")
     @Operation(
@@ -40,8 +35,12 @@ public class AuthController {
             content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
     public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid LoginPayloadDTO data) {
-        LoginResponseDTO response = userService.authenticate(data);
-        return ResponseEntity.ok().body(response);
+        try {
+            LoginResponseDTO response = authService.authenticateUser(data);
+            return ResponseEntity.ok().body(response);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -53,7 +52,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "invalid body data", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<UserResponseDTO> registerUser(@ModelAttribute @Valid RegisterPayloadDTO data) {
-        UserResponseDTO response = userService.createUser(data);
+        UserResponseDTO response = authService.registerUser(data);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

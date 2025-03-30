@@ -14,6 +14,7 @@ import com.karoldm.k_board_api.repositories.TaskRepository;
 import com.karoldm.k_board_api.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,7 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class TaskService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
