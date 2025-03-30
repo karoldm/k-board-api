@@ -2,6 +2,8 @@ package com.karoldm.k_board_api.handlers;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.karoldm.k_board_api.dto.response.ErrorResponseDTO;
+import com.karoldm.k_board_api.exceptions.UserNotAuthenticated;
+import com.karoldm.k_board_api.exceptions.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -34,6 +36,17 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(errorObject, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(UserNotAuthenticated.class)
+    public ResponseEntity<ErrorResponseDTO> handleUserNotAuthenticated(UserNotAuthenticated ex) {
+        ErrorResponseDTO errorObject = new ErrorResponseDTO(
+                HttpStatus.UNAUTHORIZED.value(),
+                ex.getMessage()
+        );
+
+        return new ResponseEntity<>(errorObject, HttpStatus.UNAUTHORIZED);
+    }
+
 
     @ExceptionHandler({BadCredentialsException.class, AuthenticationException.class})
     public ResponseEntity<ErrorResponseDTO> handleAuthenticationException(Exception ex) {
@@ -94,6 +107,15 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(errorObject, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleUserNotFoundException(UserNotFoundException ex){
+        ErrorResponseDTO errorObject = new ErrorResponseDTO(
+                HttpStatus.NOT_FOUND.value(),
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(errorObject, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(Exception.class)

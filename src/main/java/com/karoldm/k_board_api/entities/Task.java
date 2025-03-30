@@ -12,6 +12,7 @@ import java.util.*;
 @NoArgsConstructor
 @Setter
 @Getter
+@Builder
 @Entity(name = "tasks")
 public class Task {
 

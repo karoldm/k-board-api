@@ -43,9 +43,8 @@ public class ProjectController {
             @ApiResponse(responseCode = "401", description = "unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
     public ResponseEntity<ProjectResponseDTO> createProject(@RequestBody @Valid ProjectPayloadDTO data) {
-        User userLogged = userService.getSessionUser();
-        Project project = projectService.createProject(data, userLogged);
-        return ResponseEntity.status (HttpStatus.CREATED).body(ProjectMapper.toProjectResponseDTO(project));
+        ProjectResponseDTO project = projectService.createProject(data);
+        return ResponseEntity.status (HttpStatus.CREATED).body(project);
     }
 
     @GetMapping("/owner")
@@ -61,10 +60,9 @@ public class ProjectController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String direction) {
-        User user = userService.getSessionUser();
 
         Page<ProjectResponseDTO> responseProjects = projectService
-                .getAllProjectsByUser(user, filter, page, size, sortBy, direction);
+                .getAllProjectsByUser(filter, page, size, sortBy, direction);
 
         return ResponseEntity.ok(responseProjects);
     }
@@ -82,10 +80,8 @@ public class ProjectController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String direction) {
-        User user = userService.getSessionUser();
-
         Page<ProjectResponseDTO> responseProjects = projectService
-                .getAllProjectsByUserParticipation(user, filter, page, size, sortBy, direction);
+                .getAllProjectsByUserParticipation(filter, page, size, sortBy, direction);
 
         return ResponseEntity.ok(responseProjects);
     }
@@ -99,13 +95,6 @@ public class ProjectController {
             @ApiResponse(responseCode = "403", description = "the user is not project's owner", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
     public ResponseEntity<Void> deleteProject(@PathVariable UUID id) {
-        checkProjectOwnership(id);
-        Project project = getProjectOrThrow(id);
-
-        for(User user: project.getMembers()){
-            user.getProjects().remove(project);
-        }
-
         projectService.deleteProject(id);
         return ResponseEntity.noContent().build();
     }
@@ -120,15 +109,8 @@ public class ProjectController {
             @ApiResponse(responseCode = "400", description = "invalid body data", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
     public ResponseEntity<ProjectResponseDTO> addMember(@RequestBody @Valid AddMemberPayloadDTO data) {
-        Project project = getProjectOrThrow(data.projectId());
-        User member = userService.getSessionUser();
-
-        if(member.getId() == project.getOwner().getId()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User is project's owner.");
-        }
-
-        Project updatedProject = projectService.addMemberToProject(project, member);
-        return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(updatedProject));
+        ProjectResponseDTO updatedProject = projectService.addMemberToProject(data);
+        return ResponseEntity.ok(updatedProject);
     }
 
     @PutMapping("/{id}")
@@ -141,37 +123,14 @@ public class ProjectController {
             @ApiResponse(responseCode = "400", description = "invalid body data", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
     public ResponseEntity<ProjectResponseDTO> updateProject(@RequestBody @Valid EditProjectPayloadDTO data, @PathVariable UUID id) {
-        checkProjectOwnership(id);
-        Project updatedProject = projectService.updateProject(data.title(), data.membersIdToRemove(), id);
-        return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(updatedProject));
+        ProjectResponseDTO updatedProject = projectService.updateProject(data, id);
+        return ResponseEntity.ok(updatedProject);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProjectResponseDTO> getProjectById(@PathVariable UUID id) {
-        checkProjectOwnershipOrParticipation(id);
-
-        Project project = getProjectOrThrow(id);
-
-        return ResponseEntity.ok(ProjectMapper.toProjectResponseDTO(project));
+        ProjectResponseDTO project = projectService.getProjectById(id);
+        return ResponseEntity.ok(project);
     }
 
-    private void checkProjectOwnershipOrParticipation(UUID projectId) {
-        boolean isNotOwner = userService.getSessionUser().getProjects().stream().noneMatch(project -> project.getId().equals(projectId));
-        boolean isNotMember = userService.getSessionUser().getParticipatedProjects().stream().noneMatch(project -> project.getId().equals(projectId));
-
-        if (isNotMember && isNotOwner) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this project");
-        }
-    }
-
-    private void checkProjectOwnership(UUID projectId) {
-        if (userService.getSessionUser().getProjects().stream().noneMatch(project -> project.getId().equals(projectId))) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this project");
-        }
-    }
-
-    public Project getProjectOrThrow(UUID projectId) {
-        return projectService.findProjectById(projectId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found with id: " + projectId));
-    }
 }

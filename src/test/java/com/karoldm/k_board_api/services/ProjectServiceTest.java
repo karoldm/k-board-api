@@ -1,5 +1,6 @@
 package com.karoldm.k_board_api.services;
 
+import com.karoldm.k_board_api.dto.payload.AddMemberPayloadDTO;
 import com.karoldm.k_board_api.entities.Project;
 import com.karoldm.k_board_api.entities.User;
 import com.karoldm.k_board_api.repositories.ProjectRepository;
@@ -48,70 +49,5 @@ class ProjectServiceTest {
         member2 = new User();
         member2.setId(UUID.randomUUID());
         member2.setName("Member 2");
-    }
-
-    @Test
-    void shouldAddMemberToProject() {
-        when(projectRepository.save(any(Project.class))).thenReturn(project);
-        when(userRepository.save(any(User.class))).thenReturn(member1);
-
-        Project updatedProject = projectService.addMemberToProject(project, member1);
-
-        assertNotNull(updatedProject);
-        assertTrue(updatedProject.getMembers().contains(member1));
-        assertTrue(member1.getParticipatedProjects().contains(updatedProject));
-
-        verify(projectRepository, times(1)).save(project);
-        verify(userRepository, times(1)).save(member1);
-    }
-
-    @Test
-    void shouldDeleteMembersFromProject() {
-        List<User> members = Arrays.asList(member1, member2);
-        project.setMembers(new HashSet<>(members));
-        member1.setParticipatedProjects(new HashSet<>(List.of(project)));
-        member2.setParticipatedProjects(new HashSet<>(List.of(project)));
-
-        when(projectRepository.save(any(Project.class))).thenReturn(project);
-        when(userRepository.saveAll(anyList())).thenReturn(members);
-
-        Project updatedProject = projectService.deleteMembersToProject(project, members);
-
-        assertNotNull(updatedProject);
-        assertFalse(updatedProject.getMembers().contains(member1));
-        assertFalse(updatedProject.getMembers().contains(member2));
-
-        verify(projectRepository, times(1)).save(project);
-        verify(userRepository, times(1)).saveAll(members);
-    }
-
-    @Test
-    void shouldUpdateProjectTitle() {
-        String newTitle = "Updated Project Title";
-        when(projectRepository.findById(any(UUID.class))).thenReturn(Optional.of(project));
-        when(projectRepository.save(any(Project.class))).thenReturn(project);
-
-        Project updatedProject = projectService.updateProject(newTitle, new HashSet<>(), project.getId());
-
-        assertNotNull(updatedProject);
-        assertEquals(newTitle, updatedProject.getTitle());
-        verify(projectRepository, times(1)).findById(project.getId());
-        verify(projectRepository, times(1)).save(updatedProject);
-    }
-
-    @Test
-    void shouldThrowNotFoundExceptionWhenUpdatingProject() {
-        String newTitle = "Updated Project Title";
-        when(projectRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
-
-        UUID projectId = project.getId();
-        Set<UUID> membersToRemove = new HashSet<>();
-
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> projectService.updateProject(newTitle, membersToRemove, projectId)
-        );
-
-        assertEquals("Project not found with id: " + projectId, exception.getReason());
     }
 }

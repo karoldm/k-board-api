@@ -1,5 +1,7 @@
 package com.karoldm.k_board_api.services;
 
+import com.karoldm.k_board_api.dto.payload.AddMemberPayloadDTO;
+import com.karoldm.k_board_api.dto.payload.EditProjectPayloadDTO;
 import com.karoldm.k_board_api.dto.payload.ProjectPayloadDTO;
 import com.karoldm.k_board_api.dto.response.ProjectResponseDTO;
 import com.karoldm.k_board_api.entities.Project;
@@ -15,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
@@ -28,27 +31,43 @@ public class ProjectService {
     private ProjectRepository projectRepository;
     private UserRepository userRepository;
 
+    private AuthService authService;
+
     public Optional<Project> findProjectById(UUID id) {return projectRepository.findById(id);}
 
     @Transactional
-    public Project createProject(ProjectPayloadDTO projectDTO, User loggedUser) {
-        Project project = new Project();
+    public ProjectResponseDTO createProject(ProjectPayloadDTO projectDTO) {
+        User user = authService.getSessionUser();
 
-        project.setCreatedAt(OffsetDateTime.now(ZoneOffset.UTC));
-        project.setTitle(projectDTO.title());
-        project.setOwner(loggedUser);
-        project.setTasks(new HashSet<>());
+        Project project = Project.builder()
+                .createdAt(OffsetDateTime.now(ZoneOffset.UTC))
+                .title(projectDTO.title())
+                .owner(user)
+                .tasks(new HashSet<>())
+                .members(new HashSet<>())
+                .build();
 
-        return projectRepository.save(project);
+        Project savedProject = projectRepository.save(project);
+
+        return ProjectMapper.toProjectResponseDTO(savedProject);
     }
 
     @Transactional
-    public Project addMemberToProject(Project project, User member) {
+    public ProjectResponseDTO addMemberToProject(AddMemberPayloadDTO data) {
+        Project project = getProjectOrThrow(data.projectId());
+        User member = authService.getSessionUser();
+
+        if(member.getId() == project.getOwner().getId()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User is project's owner.");
+        }
+
         project.addMember(member);
         member.addProjectParticipated(project);
         userRepository.save(member);
 
-        return projectRepository.save(project);
+        Project savedProject = projectRepository.save(project);
+
+        return ProjectMapper.toProjectResponseDTO(savedProject);
     }
 
     @Transactional
@@ -65,16 +84,18 @@ public class ProjectService {
     }
 
     @Transactional
-    public Project updateProject(String title, Set<UUID> membersToRemove, UUID id) {
+    public ProjectResponseDTO updateProject(EditProjectPayloadDTO data, final UUID id) {
+        checkProjectOwnership(id);
+
         Project project = projectRepository.findById(id).orElse(null);
         if(project == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found with id: " + id);
         }
 
-        if(!membersToRemove.isEmpty()){
-            List<User> users = userRepository.findAllById(membersToRemove);
+        if(!data.membersIdToRemove().isEmpty()){
+            List<User> users = userRepository.findAllById(data.membersIdToRemove());
 
-            Set<UUID> missingUserIds = membersToRemove.stream()
+            Set<UUID> missingUserIds = data.membersIdToRemove().stream()
                     .filter(memberId -> users.stream().noneMatch(user -> user.getId().equals(memberId)))
                     .collect(Collectors.toSet());
 
@@ -85,18 +106,28 @@ public class ProjectService {
             this.deleteMembersToProject(project, users);
         }
 
-        project.setTitle(title);
-        return projectRepository.save(project);
+        project.setTitle(data.title());
+
+        Project savedProject = projectRepository.save(project);
+
+        return ProjectMapper.toProjectResponseDTO(savedProject);
     }
 
     @Transactional
     public void deleteProject(UUID id) {
+        checkProjectOwnership(id);
+        Project project = getProjectOrThrow(id);
+
+        for(User user: project.getMembers()){
+            user.getProjects().remove(project);
+        }
+
         projectRepository.deleteById(id);
     }
 
-    @Transactional
     public Page<ProjectResponseDTO> getAllProjectsByUser(
-            User user, String filter, int page, int size, String sortBy, String direction) {
+            String filter, int page, int size, String sortBy, String direction) {
+        User user = authService.getSessionUser();
 
         Sort sort = direction.equalsIgnoreCase("desc")
                 ? Sort.by(sortBy).descending()
@@ -111,7 +142,9 @@ public class ProjectService {
     }
 
     public Page<ProjectResponseDTO> getAllProjectsByUserParticipation(
-            User user, String filter, int page, int size, String sortBy, String direction) {
+            String filter, int page, int size, String sortBy, String direction) {
+
+        User user = authService.getSessionUser();
 
         Sort sort = direction.equalsIgnoreCase("desc")
                 ? Sort.by(sortBy).descending()
@@ -123,5 +156,33 @@ public class ProjectService {
                 .findByMembersContainsAndTitleContainingIgnoreCase(user, filter, pageable);
 
         return projectPage.map(ProjectMapper::toProjectResponseDTO);
+    }
+
+    public ProjectResponseDTO getProjectById(final UUID id) {
+        checkProjectOwnershipOrParticipation(id);
+
+        Project project = getProjectOrThrow(id);
+
+        return ProjectMapper.toProjectResponseDTO(project);
+    }
+
+    private void checkProjectOwnershipOrParticipation(UUID projectId) {
+        boolean isNotOwner = authService.getSessionUser().getProjects().stream().noneMatch(project -> project.getId().equals(projectId));
+        boolean isNotMember = authService.getSessionUser().getParticipatedProjects().stream().noneMatch(project -> project.getId().equals(projectId));
+
+        if (isNotMember && isNotOwner) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this project");
+        }
+    }
+
+    private void checkProjectOwnership(UUID projectId) {
+        if (authService.getSessionUser().getProjects().stream().noneMatch(project -> project.getId().equals(projectId))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this project");
+        }
+    }
+
+    public Project getProjectOrThrow(UUID projectId) {
+        return findProjectById(projectId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found with id: " + projectId));
     }
 }

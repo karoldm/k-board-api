@@ -28,8 +28,6 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/auth")
 @AllArgsConstructor
 public class AuthController {
-    private final TokenService tokenService;
-    private AuthenticationManager authenticationManager;
     private UserService userService;
 
     @PostMapping("/login")
@@ -42,21 +40,8 @@ public class AuthController {
             content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
     public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid LoginPayloadDTO data) {
-        var usernamePassword = new UsernamePasswordAuthenticationToken(data.email(), data.password());
-        var auth = authenticationManager.authenticate(usernamePassword);
-
-        UserDetails userDetails = (UserDetails) auth.getPrincipal();
-        String token = tokenService.generateToken(userDetails.getUsername());
-
-        User user = userService.findUserByEmail(userDetails.getUsername());
-
-        return ResponseEntity.ok().body(new LoginResponseDTO(token, new UserResponseDTO(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getPhotoUrl(),
-                user.getCreatedAt()
-        )));
+        LoginResponseDTO response = userService.authenticate(data);
+        return ResponseEntity.ok().body(response);
     }
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -68,18 +53,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "invalid body data", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<UserResponseDTO> registerUser(@ModelAttribute @Valid RegisterPayloadDTO data) {
-
-        if(userService.findUserByEmail(data.email()) != null){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already registered.");
-        }
-
-        User user = userService.createUser(data);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new UserResponseDTO(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getPhotoUrl(),
-                user.getCreatedAt()
-        ));
+        UserResponseDTO response = userService.createUser(data);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

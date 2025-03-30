@@ -46,23 +46,8 @@ public class TaskController {
 
     })
     public ResponseEntity<TaskResponseDTO> createTask(@RequestBody @Valid TaskPayloadDTO data) {
-        checkProjectOwnershipOrParticipation(data.projectId());
-        Project project = getProjectOrThrow(data.projectId());
-
-        Set<UUID> membersId = data.membersId();
-        Set<User> members = new HashSet<>(userService.findAllUsersById(membersId));
-
-        Set<UUID> missingUserIds = membersId.stream()
-                .filter(memberId -> members.stream().noneMatch(user -> user.getId().equals(memberId)))
-                .collect(Collectors.toSet());
-
-        if (!missingUserIds.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Users not found with IDs: " + missingUserIds);
-        }
-
-        Task task = taskService.createTask(data, userService.getSessionUser(), project, members);
-
-        return ResponseEntity.ok(TaskMapper.toTaskResponseDTO(task));
+        TaskResponseDTO task = taskService.createTask(data);
+        return ResponseEntity.ok(task);
     }
 
     @GetMapping("/{projectId}")
@@ -76,11 +61,7 @@ public class TaskController {
     public ResponseEntity<TaskListResponseDTO> getAllTasksByProject(
             @PathVariable UUID projectId, @RequestParam Optional<UUID> memberId
           ) {
-
-        checkProjectOwnershipOrParticipation(projectId);
-        Project project = getProjectOrThrow(projectId);
-
-        TaskListResponseDTO responseTasks = taskService.getTasksByProject(project, memberId);
+        TaskListResponseDTO responseTasks = taskService.getTasksByProject(projectId, memberId);
         return ResponseEntity.ok(responseTasks);
     }
 
@@ -98,38 +79,8 @@ public class TaskController {
             @PathVariable UUID taskId,
             @RequestBody @Valid EditTaskPayloadDTO data
     ) {
-
-        Optional<Task> task = taskService.findTaskById(taskId);
-
-        if(task.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found with ID: " + taskId);
-        }
-
-        checkProjectOwnershipOrParticipation(task.get().getProject().getId());
-
-        if(data.responsible().isPresent()){
-            Project project = task.get().getProject();
-            Set<User> projectMembers = new HashSet<>(project.getMembers());
-            projectMembers.add(project.getOwner());
-
-            // handle user id doest not belong to project
-            Set<UUID> missingUserIds = data.responsible().get().stream()
-                    .filter(memberId -> projectMembers.stream().noneMatch(user -> user.getId().equals(memberId)))
-                    .collect(Collectors.toSet());
-
-            if (!missingUserIds.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Users not found with ID's: " + missingUserIds);
-            }
-
-            // get users by id
-            Set<User> responsible = new HashSet<>(userService.findAllUsersById(data.responsible().get()));
-
-            Task updatedTask = taskService.editTask(task.get(), data, responsible);
-            return ResponseEntity.ok(TaskMapper.toTaskResponseDTO(updatedTask));
-        }
-
-        Task updatedTask = taskService.editTask(task.get(), data);
-        return ResponseEntity.ok(TaskMapper.toTaskResponseDTO(updatedTask));
+        TaskResponseDTO updatedTask = taskService.editTask(data, taskId);
+        return ResponseEntity.ok(updatedTask);
 
     }
 
@@ -143,30 +94,7 @@ public class TaskController {
             @ApiResponse(responseCode = "404", description = "task not found", content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
     })
     public ResponseEntity<Void> deleteTask(@PathVariable UUID taskId) {
-        Optional<Task> task = taskService.findTaskById(taskId);
-
-        if(task.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found with ID: " + taskId);
-        }
-
-        checkProjectOwnershipOrParticipation(task.get().getProject().getId());
-
         taskService.deleteTask(taskId);
-
         return ResponseEntity.noContent().build();
-    }
-
-
-    private void checkProjectOwnershipOrParticipation(UUID projectId) {
-        boolean isOwner = userService.getSessionUser().getProjects().stream().anyMatch(project -> project.getId().equals(projectId));
-        boolean isMember = userService.getSessionUser().getParticipatedProjects().stream().anyMatch(project -> project.getId().equals(projectId));
-        if (!isOwner && !isMember) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this project");
-        }
-    }
-
-    private Project getProjectOrThrow(UUID projectId) {
-        return projectService.findProjectById(projectId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found with id: " + projectId));
     }
 }

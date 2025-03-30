@@ -11,7 +11,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.io.Serial;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -20,10 +19,12 @@ import java.util.*;
 @Getter
 @Setter
 @Entity(name="users")
+@Builder
 public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @NotNull
     private UUID id;
 
     @NotNull(message = "Name cannot be null")

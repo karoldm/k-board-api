@@ -16,6 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity(name="projects")
+@Builder
 public class Project {
 
     @Id
