@@ -6,6 +6,7 @@ import com.karoldm.k_board_api.dto.payload.RegisterPayloadDTO;
 import com.karoldm.k_board_api.dto.response.LoginResponseDTO;
 import com.karoldm.k_board_api.dto.response.UserResponseDTO;
 import com.karoldm.k_board_api.entities.User;
+import com.karoldm.k_board_api.exceptions.InvalidPasswordException;
 import com.karoldm.k_board_api.exceptions.UserNotAuthenticated;
 import com.karoldm.k_board_api.exceptions.UserNotFoundException;
 import com.karoldm.k_board_api.mappers.UserMapper;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,6 +38,8 @@ public class AuthService implements UserDetailsService {
     private final TokenService tokenService;
     private final AuthenticationConfiguration authenticationConfiguration;
     private final FileStorageService storageService;
+
+    private final int MIN_PASSWORD_SIZE = 8;
 
     private AuthenticationManager authenticationManager() throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
@@ -59,6 +63,11 @@ public class AuthService implements UserDetailsService {
             throw new UserNotFoundException(String.format("User with email %s not found", loginPayloadDTO.email()));
         }
 
+        boolean matches = new BCryptPasswordEncoder().matches(loginPayloadDTO.password(), user.getPassword());
+        if(!matches){
+            throw new InvalidPasswordException("Incorrect password");
+        }
+
         var usernamePassword = new UsernamePasswordAuthenticationToken(
                 loginPayloadDTO.email(), loginPayloadDTO.password());
 
@@ -75,6 +84,10 @@ public class AuthService implements UserDetailsService {
 
         if(existingUser != null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already registered.");
+        }
+
+        if(registerPayloadDTO.password().length() < MIN_PASSWORD_SIZE) {
+            throw new InvalidPasswordException("The password must have at least 8 character.");
         }
 
         String encryptedPassword = new BCryptPasswordEncoder().encode(registerPayloadDTO.password());
