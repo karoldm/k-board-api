@@ -3,12 +3,14 @@ import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.karoldm.k_board_api.dto.response.ErrorResponseDTO;
 import com.karoldm.k_board_api.exceptions.AmazonS3Exception;
+import com.karoldm.k_board_api.exceptions.InvalidPasswordException;
 import com.karoldm.k_board_api.exceptions.UserNotAuthenticated;
 import com.karoldm.k_board_api.exceptions.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -49,7 +51,11 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ExceptionHandler({BadCredentialsException.class, AuthenticationException.class})
+    @ExceptionHandler({
+            BadCredentialsException.class,
+            AuthenticationException.class,
+            InternalAuthenticationServiceException.class
+    })
     public ResponseEntity<ErrorResponseDTO> handleAuthenticationException(Exception ex) {
         ErrorResponseDTO errorObject = new ErrorResponseDTO(
                 HttpStatus.UNAUTHORIZED.value(),
@@ -128,14 +134,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorObject, HttpStatus.BAD_GATEWAY);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDTO> handleGenericException(Exception ex) {
+    @ExceptionHandler(InvalidPasswordException.class)
+    public ResponseEntity<ErrorResponseDTO> invalidPasswordException(InvalidPasswordException ex) {
         ErrorResponseDTO errorObject = new ErrorResponseDTO(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "An unexpected error occurred: " + ex.getMessage()
-                + " - " + ex.getCause() + " - " + Arrays.toString(ex.getStackTrace())
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage()
         );
-
-        return new ResponseEntity<>(errorObject, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(errorObject, HttpStatus.BAD_REQUEST);
     }
 }
