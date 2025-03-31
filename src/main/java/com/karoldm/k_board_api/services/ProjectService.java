@@ -30,8 +30,7 @@ import java.util.stream.Collectors;
 public class ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
-
-    private AuthService authService;
+    private final AuthService authService;
 
     public Optional<Project> findProjectById(UUID id) {return projectRepository.findById(id);}
 
