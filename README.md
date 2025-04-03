@@ -33,7 +33,7 @@ API de Gerenciamento de Projetos e Tarefas em um Quadro Kanban! Esta API foi des
 ## Como Executar o Projeto
 
 ### Pré-requisitos
-- Java 21
+- Java 17
 - Maven
 - AWS S3 Bucket configurado
 - Banco de dados relacional configurado
