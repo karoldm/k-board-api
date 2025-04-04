@@ -8,6 +8,10 @@ API de Gerenciamento de Projetos e Tarefas em um Quadro Kanban! Esta API foi des
 - **Cadastro de Usuários**: Os usuários podem se cadastrar fornecendo informações básicas como nome, email, senha e foto de perfil.
 - **Login**: Autenticação segura utilizando Spring Security e JWT (JSON Web Tokens).
 
+### Gerenciamento de Perfil
+- **Atualizar Perfil**: Os usuários podem alterar foto e nome
+- **Atualizar Senha**: Os usuários pode trocar de senha
+
 ### Gerenciamento de Projetos
 - **Criação de Projetos**: Usuários podem criar novos projetos.
 - **Convite de Membros**: O criador do projeto pode compartilhar o ID do projeto para que outros usuários possam se juntar como membros.
