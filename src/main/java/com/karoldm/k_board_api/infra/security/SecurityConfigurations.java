@@ -1,9 +1,9 @@
 package com.karoldm.k_board_api.infra.security;
 
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -17,6 +17,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
+import java.util.Arrays;
+
 @EnableWebSecurity
 @Configuration
 @RequiredArgsConstructor
@@ -24,10 +26,13 @@ public class SecurityConfigurations {
 
     private final SecurityFilter securityFilter;
     private final CorsConfigurationSource corsConfigurationSource;
+    private final Environment env;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        return httpSecurity
+        boolean isProd = Arrays.asList(env.getActiveProfiles()).contains("prod");
+        
+        httpSecurity
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -36,8 +41,17 @@ public class SecurityConfigurations {
                         .requestMatchers("/error", "/swagger-ui/*",  "/v3/api-docs", "/v3/api-docs/*").permitAll()
                         .anyRequest().authenticated() // Authenticated for all other endpoints
                 )
-                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
+                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
+
+        if (isProd) {
+            httpSecurity
+                .requiresChannel(channel -> channel
+                    .requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null)
+                    .requiresSecure()
+                );
+        }
+
+        return httpSecurity.build();
     }
 
     @Bean
