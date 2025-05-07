@@ -25,7 +25,7 @@ public class UserService {
     public void updatePassword(EditPasswordPayloadDTO editPasswordPayloadDTO) {
         User user = authService.getSessionUser();
 
-        if(editPasswordPayloadDTO.password().length() < MIN_PASSWORD_SIZE) {
+        if (editPasswordPayloadDTO.password().length() < MIN_PASSWORD_SIZE) {
             throw new InvalidPasswordException("The password must have at least 8 character.");
         }
 
@@ -39,12 +39,14 @@ public class UserService {
     public UserResponseDTO updateUser(EditUserPayloadDTO editUserPayloadDTO) {
         User user = authService.getSessionUser();
 
-        if(editUserPayloadDTO.name() != null) {
+        if (editUserPayloadDTO.name() != null) {
             user.setName(editUserPayloadDTO.name());
         }
 
-        if(editUserPayloadDTO.photo() != null) {
-            storageService.removeFileByUrl(user.getPhotoUrl());
+        if (editUserPayloadDTO.photo() != null) {
+            if (user.getPhotoUrl() != null && !user.getPhotoUrl().isEmpty()) {
+                storageService.removeFileByUrl(user.getPhotoUrl());
+            }
             String photoKey = storageService.uploadFile(editUserPayloadDTO.photo());
             user.setPhotoUrl(photoKey);
         }
