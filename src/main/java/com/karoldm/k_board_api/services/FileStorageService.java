@@ -21,60 +21,60 @@ public class FileStorageService {
     @Value("${api.aws.bucket-url}")
     private String bucketUrl;
 
+    final private String bucketName = "k-board-images";
+
     public FileStorageService(AmazonS3 amazonS3Client) {
         this.amazonS3Client = amazonS3Client;
     }
 
-    public void removeFileByUrl(String fileUrl) {
-        try {
-            String[] splittedUrl = fileUrl.split("/");
-            String fileKey = splittedUrl[splittedUrl.length-1];
-
-            DeleteObjectRequest deleteRequest = new DeleteObjectRequest(
-                    "k-board-images",
-                    fileKey
-            );
-
-            amazonS3Client.deleteObject(deleteRequest);
-        } catch(Exception ex){
-            throw new AmazonS3Exception(String.format("Error deleting file: %s", ex.getMessage()));
-        }
-    }
-
     public String uploadFile(MultipartFile fileUpload) {
-        if(fileUpload == null || fileUpload.isEmpty()) {
+        if (fileUpload == null || fileUpload.isEmpty()) {
             return "";
         }
 
         try {
-            String key = UUID.randomUUID().toString();
+            String originalFilename = fileUpload.getOriginalFilename();
+            String extension = "";
+            String fileName = "";
 
-            String fileName = fileUpload.getOriginalFilename();
-            if (fileName != null) {
-            String[] splitFileName = fileName.trim().split("\\.");
-            if(splitFileName.length == 0) {
-                throw new RuntimeException("Invalid file name or extension");
+            if (originalFilename != null && originalFilename.contains(".")) {
+                int lastDotIndex = originalFilename.lastIndexOf('.');
+                fileName = originalFilename.substring(0, lastDotIndex);
+                extension = originalFilename.substring(lastDotIndex);
             }
-            String fileKey = splitFileName[0] + "-" + key + "." + splitFileName[1];
 
-            ObjectMetadata objectMetadata = new ObjectMetadata();
-            objectMetadata.setContentLength(fileUpload.getSize());
-            objectMetadata.setContentType(fileUpload.getContentType());
+            String fileKey = String.format("%s-%s%s",
+                    fileName,
+                    UUID.randomUUID(),
+                    extension);
 
-            PutObjectRequest request = new PutObjectRequest(
-                    "k-board-images",
-                    fileKey,
-                    fileUpload.getInputStream(),
-                    objectMetadata);
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentLength(fileUpload.getSize());
+            metadata.setContentType(fileUpload.getContentType());
 
-            amazonS3Client.putObject(request);
+            amazonS3Client.putObject(
+                    new PutObjectRequest(bucketName, fileKey, fileUpload.getInputStream(), metadata)
+            );
 
             return bucketUrl + fileKey;
-
-            }
-            return null;
         } catch (IOException ex) {
-            throw new AmazonS3Exception(String.format("Error uploading file: %s", ex.getMessage()));
+            throw new AmazonS3Exception("Error uploading file: " + ex.getMessage());
+        }
+    }
+
+    public void removeFileByUrl(String fileUrl) {
+        if (fileUrl == null || fileUrl.isEmpty()) {
+            return;
+        }
+
+        try {
+            String fileKey = fileUrl.replace(bucketUrl, "");
+
+            if (amazonS3Client.doesObjectExist(bucketName, fileKey)) {
+                amazonS3Client.deleteObject(bucketName, fileKey);
+            }
+        } catch (Exception ex) {
+            throw new AmazonS3Exception("Error deleting file: " + ex.getMessage());
         }
     }
 }
